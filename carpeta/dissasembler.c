@@ -41,7 +41,7 @@ int arma_dissa(byte tipo, dword ip_dissa, char* str_op, char* str_hex){
             byte b2 = leer_memoria_byte(ip_dissa+1);
             byte b3 = leer_memoria_byte(ip_dissa+2);
 
-            sprintf(str_hex + strlen(str_hex), "%02X %02X %02xX", b1, b2, b3);
+            sprintf(str_hex + strlen(str_hex), "%02X %02X %02X", b1, b2, b3);
 
             short offset = (short)((b1 << 8) | b2);
             byte reg = b3 & 0x1F;
@@ -53,7 +53,11 @@ int arma_dissa(byte tipo, dword ip_dissa, char* str_op, char* str_hex){
             }else{
                 sprintf(str_op, "[%s%d]", nom_registros[reg], offset);
             }
+
+            return 3;
         }
+        default:
+            return 0;
     }
 }
 
@@ -68,17 +72,18 @@ dword desensamblar(dword ip_actual){
 
     byte primer_byte = leer_memoria_byte(ip_dissa);
     sprintf(str_hex, " %02X", primer_byte);
+    ip_dissa += 1;
 
     byte bits_opc = primer_byte & 0x0F;
     byte bits_alto = (primer_byte >> 6) & 0x03;
     byte bits_medio = (primer_byte >> 4) & 0x03;
 
-    byte tipo_a, tipo_b, opc;
+    byte tipo_a = 0x00, tipo_b = 0x00, opc = 0x00;
 
     if(bits_medio != 0x00){
         tipo_a = bits_medio;
-        tipo_b = bits_altos;
-        opc = bits_opc;
+        tipo_b = bits_alto;
+        opc = 0x10 | bits_opc;
     }else if(bits_alto != 0x00){
         tipo_a = bits_alto;
         opc = bits_opc;
@@ -86,17 +91,19 @@ dword desensamblar(dword ip_actual){
         opc = bits_opc;
     }
 
-    if(tipo_a != 0x00){
-        ip_dissa += arma_dissa(tipo_a, ip_dissa, str_opa, str_hex);
-    }
     if(tipo_b != 0x00) {
         ip_dissa += arma_dissa(tipo_b, ip_dissa, str_opb, str_hex);
     }
 
+    if(tipo_a != 0x00){
+        ip_dissa += arma_dissa(tipo_a, ip_dissa, str_opa, str_hex);
+    }
+
+
     if (tipo_b != 0x00) {
-        printf("[%04X] %-21s |  %-7s  %s, %s\n", ip_actual, str_hex, mnemonicos[opc], str_op_a, str_op_b);
+        printf("[%04X] %-21s |  %-7s  %s, %s\n", ip_actual, str_hex, mnemonicos[opc], str_opa, str_opb);
     } else if (tipo_a != 0x00) {
-        printf("[%04X] %-21s |  %-7s  %s\n", ip_actual, str_hex, mnemonicos[opc], str_op_a);
+        printf("[%04X] %-21s |  %-7s  %s\n", ip_actual, str_hex, mnemonicos[opc], str_opa);
     } else {
         printf("[%04X] %-21s |  %-7s\n", ip_actual, str_hex, mnemonicos[opc]);
     }
