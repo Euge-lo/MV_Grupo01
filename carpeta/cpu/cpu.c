@@ -98,15 +98,16 @@ void iniciar_ejecucion(void){
         dword valor_a = 0;
         dword valor_b = 0;
 
+        if(tipo_b != 0x00){
+            valor_b = leer_valor_operando(tipo_b);
+        }
 
         if(tipo_a != 0x00){
             valor_a = leer_valor_operando(tipo_a);
         }
 
 
-        if(tipo_b != 0x00){
-            valor_b = leer_valor_operando(tipo_b);
-        }
+
 
         registros[OP1] = (tipo_a << 24) | (valor_a & 0x00FFFFFF);
         registros[OP2] = (tipo_b << 24) | (valor_b & 0x00FFFFFF);

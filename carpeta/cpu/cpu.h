@@ -1,6 +1,3 @@
-#ifndef
-#define CPU_H
-
 #include "tipos.h"
 
 //registros de instruccion
@@ -37,6 +34,9 @@
 
 extern dword registros[32];
 
-void inicializar registros(void);
+void instruccion_invalida(void);
+void inicializar_registros(void);
+dword leer_valor_operando(byte tipo);
+void iniciar_ejecucion(void);
 
-#endif
+
