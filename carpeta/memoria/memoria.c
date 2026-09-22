@@ -16,8 +16,8 @@ void configurar_segmentos(word tamano_codigo) {
     tabla_segmentos[0] = (0x0000 << 16) | (tamano_codigo & 0xFFFF);
 
 
-    word base_datos = tamano_codigo;
-    word tamano_datos = 16384 - tamano_codigo;
+    dword base_datos = tamano_codigo;
+    dword tamano_datos = 16384 - tamano_codigo;
     tabla_segmentos[1] = (base_datos << 16) | (tamano_datos & 0xFFFF);
 
 
