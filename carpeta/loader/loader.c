@@ -1,8 +1,11 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
+#include "loader.h"
+#include "../memoria/memoria.h"
 
-#include "memoria.h"
+
+static word tamCodGuardado = 0;
 
 bool cargarPrograma(const char *rutaArchivo) {
     char firma[6] = {0}; // VMX26
@@ -14,6 +17,13 @@ bool cargarPrograma(const char *rutaArchivo) {
         return false;
       }
     else{
+
+      if (fread(firma, 1, 5, archivo) != 5) {
+            printf("Error: Archivo demasiado corto para leer la firma.\n");
+            fclose(archivo);
+            return false;
+        }
+
        // Validacion del Identificador (Bytes 0-4: "VMX26")
       if (strncmp(firma, "VMX26", 5) != 0) {
          printf("Error: Firma invalida. Se esperaba VMX26, se leyo %s\n", firma);
@@ -37,7 +47,7 @@ bool cargarPrograma(const char *rutaArchivo) {
                }
                else{
                   printf("Version validada correctamente.\n");
-                  //Lectura del Tamano del Codigo (Bytes 6-7) 
+                  //Lectura del Tamano del Codigo (Bytes 6-7)
                   byte bufferTam[2];
                   // Leemos 2 bloques de 1 byte
                   if (fread(bufferTam, 1, 2, archivo) != 2) {
@@ -45,10 +55,13 @@ bool cargarPrograma(const char *rutaArchivo) {
                      fclose(archivo);
                      return false;
                   }
-                  
+
                   // Reconstruimos el numero de 16 bits usando algebra de bits (Big-Endian)
                   word tamCodigo = (bufferTam[0] << 8) | bufferTam[1];
-                  
+                  tamCodGuardado = tamCodigo;
+                  configurar_segmentos(tamCodigo);
+
+
                   printf("Tamano del bloque de codigo leido: %d bytes \n", tamCodigo);
 
                   // Parte sin revisar todavia
@@ -57,14 +70,14 @@ bool cargarPrograma(const char *rutaArchivo) {
                      // 5. Volcado del Codigo en el Segmento 0 (Code Segment)
                      // La direccion base es 0x00000000 (Segmento 0, Offset 0)
                      dword direccionCodigo = 0x00000000;
-                     
+
                      printf("Cargando %d bytes de codigo en la memoria...\n", tamCodigo);
                      for (int i = 0; i < tamCodigo; i++) {
                         byte byteLeido;
                         // Leemos 1 byte. Si fread no devuelve 1, el archivo esta corrupto o incompleto.
                         if (fread(&byteLeido, 1, 1, archivo) == 1) {
                               // Utilizamos la funcion de escritura de la memoria (asumimos que la creaste en memoria.c)
-                              escribirMemoriaByte(direccionCodigo + i, byteLeido);
+                              escribir_memoria_byte(direccionCodigo + i, byteLeido);
                         } else {
                               printf("Error: Archivo truncado durante la lectura de las instrucciones.\n");
                               fclose(archivo);
@@ -74,15 +87,15 @@ bool cargarPrograma(const char *rutaArchivo) {
 
                      // 6. Volcado de los Datos en el Segmento 1 (Data Segment)
                      // Construimos la direccion base 0x00010000 (Segmento 1, Offset 0)
-                     dword direccionDatos = (1 << 16) | 0x0000; 
+                     dword direccionDatos = (1 << 16) | 0x0000;
                      dword desplazamiento = 0;
                      byte byteDato;
-                     
-                     // Como el encabezado no dice cuanto ocupan los datos, leemos en un bucle 
-                     // infinito hasta que fread devuelva 0, lo que significa que chocamos contra 
+
+                     // Como el encabezado no dice cuanto ocupan los datos, leemos en un bucle
+                     // infinito hasta que fread devuelva 0, lo que significa que chocamos contra
                      // el final del archivo (EOF - End Of File).
                      while (fread(&byteDato, 1, 1, archivo) == 1) {
-                        escribirMemoriaByte(direccionDatos + desplazamiento, byteDato);
+                        escribir_memoria_byte(direccionDatos + desplazamiento, byteDato);
                         desplazamiento++;
                      }
 
@@ -95,20 +108,24 @@ bool cargarPrograma(const char *rutaArchivo) {
                      return true;
 
                }
-               
 
-               
+
+
             }
 
-            
-    
+
+
 
          }
-      
 
-    
+
+
       }
 
 }
 
-// return de tamCodigo
+
+word obtenerTamCodigo(void){
+    return tamCodGuardado;
+}
+
