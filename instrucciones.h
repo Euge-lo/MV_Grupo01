@@ -1,4 +1,5 @@
 #define MAXOPERACIONES 32
+#define MAXCADENABINARIA 33
 
 typedef void (*vecOps[])(void);
 
