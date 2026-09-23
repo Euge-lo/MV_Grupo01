@@ -20,7 +20,7 @@ int arma_dissa(byte tipo, dword ip_dissa, char* str_op, char* str_hex){
             byte reg = b1 & 0x1F;
 
             sprintf(str_op, "%s", nom_registros[reg]);
-            sprintf(str_hex + strlen(str_hex), "%02X", b1);//usamos strlen para que no pise el valor que ya teniamos y lo agregue despues de el texto que ya hay
+            sprintf(str_hex + strlen(str_hex), " %02X", b1);//usamos strlen para que no pise el valor que ya teniamos y lo agregue despues de el texto que ya hay
 
             return 1; //retornamos la cantidad de bytes que leimos
         }
@@ -30,9 +30,9 @@ int arma_dissa(byte tipo, dword ip_dissa, char* str_op, char* str_hex){
 
             short valor = (short)((b1 << 8) | b2);
 
-            sprintf(str_op, "%d", (int)valor);
+            sprintf(str_op, "0x%X", (int)valor);
 
-            sprintf(str_hex + strlen(str_hex), "%02X %02X", b1, b2);
+            sprintf(str_hex + strlen(str_hex), " %02X %02X", b1, b2);
 
             return 2;
         }
@@ -41,7 +41,7 @@ int arma_dissa(byte tipo, dword ip_dissa, char* str_op, char* str_hex){
             byte b2 = leer_memoria_byte(ip_dissa+1);
             byte b3 = leer_memoria_byte(ip_dissa+2);
 
-            sprintf(str_hex + strlen(str_hex), "%02X %02X %02X", b1, b2, b3);
+            sprintf(str_hex + strlen(str_hex), " %02X %02X %02X", b1, b2, b3);
 
             short offset = (short)((b1 << 8) | b2);
             byte reg = b3 & 0x1F;
