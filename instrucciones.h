@@ -1,7 +1,8 @@
 #define MAXOPERACIONES 32
 #define MAXCADENABINARIA 33
+#define 3BYTES 24
 
-typedef void (*vecOps[])(void);
+typedef void (*vecOps)(void);
 
 extern vecOps vecOperaciones[MAXOPERACIONES];
 
@@ -39,6 +40,11 @@ void NOT(void);
 
 //instrucción sin operandos
 void STOP(void);
+
+//get y set
+
+dword getOperando(dword op);
+void setOperando(dword operando, dword valor);
 
 
 
