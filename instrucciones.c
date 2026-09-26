@@ -538,7 +538,7 @@ void SYS(void){
                         break;
                 case 4: scanf("%o", &dato);            //octal
                         break;
-                case 2: scanf("%c", (char*)&dato);           //caracter
+                case 2: scanf(" %c", (char*)&dato);           //caracter
                         break;
                 case 1: scanf("%d", &dato);                                //decimal
                         break;
@@ -561,10 +561,10 @@ void SYS(void){
                 printf("\n[%04X]: ",dirFisica);
 
                 if(tamano == 1)
-                    leer_memoria_byte(dirLogica,(byte)dato);
+                    dato = leer_memoria_byte(dirLogica);
                 else
                     if(tamano == 4)
-                        leer_memoria_dword(dirLogica,dato);
+                       dato = leer_memoria_dword(dirLogica);
 
                 if (modo & 0x01)            // decimal
                     printf("%d ", dato);
@@ -580,7 +580,7 @@ void SYS(void){
                 if (modo & 0x10){          // binario
                     bitsTot = tamano * 8;
                     printf("0b");
-                    for (i = bitsTot; i > 0; i--)
+                    for (i = bitsTot; i >= 0; i--)
                         printf("%d", (dato >> i) & 1);
                     printf(" ");
                 }
