@@ -1,6 +1,6 @@
 #define MAXOPERACIONES 32
 #define MAXCADENABINARIA 33
-#define 3BYTES 24
+#define TRESBYTES 24
 
 typedef void (*vecOps)(void);
 
@@ -43,8 +43,8 @@ void STOP(void);
 
 //get y set
 
-dword getOperando(dword op);
-void setOperando(dword operando, dword valor);
+dword getOperando(dword);
+void setOperando(dword,dword);
 
 
 

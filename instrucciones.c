@@ -13,7 +13,7 @@ void MOV(void){
     byte tipo;
 
     a = getOperando(registros[OP1]);
-    tipo = a >> 3BYTES;
+    tipo = a >> TRESBYTES;
 
     if (tipo != 2){
         b = getOperando(registros[OP2]);
@@ -41,7 +41,7 @@ void ADD(void){
     byte tipo;
 
     a = getOperando(registros[OP1]);
-    tipo = a >> 3BYTES;
+    tipo = a >> TRESBYTES;
 
     if (tipo != 2){
         b = getOperando(registros[OP2]);
@@ -79,7 +79,7 @@ void SUB(void){
     byte tipo;
 
     a = getOperando(registros[OP1]);
-    tipo = a >> 3BYTES;
+    tipo = a >> TRESBYTES;
 
     if (tipo != 2){
         b = getOperando(registros[OP2]);
@@ -118,7 +118,7 @@ void MUL(void){
     byte tipo;
 
     a = getOperando(registros[OP1]);
-    tipo = a >> 3BYTES;
+    tipo = a >> TRESBYTES;
 
     if (tipo != 2){
         b = getOperando(registros[OP2]);
@@ -156,7 +156,7 @@ void DIV(void){
     byte tipo;
 
     a = getOperando(registros[OP1]);
-    tipo = a >> 3BYTES;
+    tipo = a >> TRESBYTES;
 
     if (tipo != 2){
         b = getOperando(registros[OP2]);
@@ -229,7 +229,7 @@ void AND(void){
     byte tipo;
 
     a = getOperando(registros[OP1]);
-    tipo = a >> 3BYTES;
+    tipo = a >> TRESBYTES;
 
     if (tipo != 2){
         b = getOperando(registros[OP2]);
@@ -256,7 +256,7 @@ void OR(void){
     byte tipo;
 
     a = getOperando(registros[OP1]);
-    tipo = a >> 3BYTES;
+    tipo = a >> TRESBYTES;
 
     if (tipo != 2){
         b = getOperando(registros[OP2]);
@@ -283,7 +283,7 @@ void XOR(void){
     byte tipo;
 
     a = getOperando(registros[OP1]);
-    tipo = a >> 3BYTES;
+    tipo = a >> TRESBYTES;
 
     if (tipo != 2){
         b = getOperando(registros[OP2]);
@@ -342,7 +342,7 @@ void SHL(void){
     byte tipo;
 
     a = getOperando(registros[OP1]);
-    tipo = a >> 3BYTES;
+    tipo = a >> TRESBYTES;
 
     if (tipo != 2){
         b = getOperando(registros[OP2]);
@@ -378,7 +378,7 @@ void SHR(void){
     byte tipo;
 
     a = getOperando(registros[OP1]);
-    tipo = a >> 3BYTES;
+    tipo = a >> TRESBYTES;
 
     if (tipo != 2){
         b = getOperando(registros[OP2]);
@@ -412,7 +412,7 @@ void SAR(void){
     byte tipo;
 
     a = getOperando(registros[OP1]);
-    tipo = a >> 3BYTES;
+    tipo = a >> TRESBYTES;
 
     if (tipo != 2){
         b = getOperando(registros[OP2]);
@@ -444,7 +444,7 @@ void LDL(void){
     byte tipo;
 
     a = getOperando(registros[OP1]);
-    tipo = a >> 3BYTES;
+    tipo = a >> TRESBYTES;
 
     if (tipo != 2){
         b = getOperando(registros[OP2]);
@@ -468,7 +468,7 @@ void LDH(void){
     byte tipo;
 
     a = getOperando(registros[OP1]);
-    tipo = a >> 3BYTES;
+    tipo = a >> TRESBYTES;
 
     if (tipo != 2){
         b = getOperando(registros[OP2]);
@@ -490,7 +490,7 @@ void RND(void){     //carga en OP1 un valor entre 0 y b
     byte tipo;
 
     a = getOperando(registros[OP1]);
-    tipo = a >> 3BYTES;
+    tipo = a >> TRESBYTES;
 
     if (tipo != 2){
         b = getOperando(registros[OP2]);
@@ -680,7 +680,7 @@ void NOT(void){
     byte tipo;
 
     a = getOperando(registros[OP1]);
-    tipo = a >> 3BYTES;
+    tipo = a >> TRESBYTES;
 
     if (tipo != 2){
         aux = ~a;
@@ -707,13 +707,13 @@ void STOP(void){
     registros[IP] = 0xFFFFFFFF;
 }
 
-dword getOperando(dword op) {
+dword getOperando(dword operando) {
     dword tipo, valor, dirLog, aux;
     int32_t valSig;
     byte codReg = 0;
 
-    tipo = op >> 3BYTES;
-    valor = op & 0x00FFFFFF; //FFFFFF00
+    tipo = operando >> TRESBYTES;
+    valor = operando & 0x00FFFFFF; //FFFFFF00
     valSig = (int32_t)(valor << 8) >> 16; //por si es valor inmediato u offset del tipo memoria
 
     if (tipo == 1 || tipo == 3) //aislo el código de registro
@@ -728,7 +728,7 @@ dword getOperando(dword op) {
                 aux = leer_memoria_dword(dirLog);
                 break;
 
-        default:print("\nError, tipo de operando no existente.");
+        default:printf("\nError, tipo de operando no existente.");
                 registros[IP] = 0xFFFFFFFF;
                 break;
     }
@@ -741,7 +741,7 @@ void setOperando(dword operando, dword valor) {
     int32_t valSig;
     byte codReg = 0;
 
-    tipo = operando >> 3BYTES;
+    tipo = operando >> TRESBYTES;
     val = operando & 0x00FFFFFF;
 
     if (tipo == 1 || tipo == 3)
