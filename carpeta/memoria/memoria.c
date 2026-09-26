@@ -66,33 +66,57 @@ dword traducir_direccion(dword direccion_logica, byte cant_bytes){
 }
 
 byte leer_memoria_byte(dword direccion_logica){
+    registros[LAR] = direccion_logica;
+
     dword dir_fisica = traducir_direccion(direccion_logica, 1);
+
+    registros[MAR] = (cant_bytes << 16) | (dir_fisica & 0xFFFF);
+
+    registros[MBR] = valor_obtenido;
     return memoria_principal[dir_fisica];
 }
 
 dword leer_memoria_dword(dword direccion_logica){
+    registros[LAR] = direccion_logica;
+
     dword dir_fisica = traducir_direccion(direccion_logica, 4);
 
-
+    registros[MAR] = (cant_bytes << 16) | (dir_fisica & 0xFFFF);
 
     byte b1 = memoria_principal[dir_fisica];
     byte b2 = memoria_principal[dir_fisica + 1];
     byte b3 = memoria_principal[dir_fisica + 2];
     byte b4 = memoria_principal[dir_fisica + 3];
 
+    registros[MBR] = valor_obtenido;
+
     return (b1 << 24) | (b2 << 16) | (b3 << 8) | b4;
 }
 
+
+
 void escribir_memoria_byte(dword direccion_logica, byte valor) {
 
+    registros[LAR] = direccion_logica;
+
+    registros[MBR] = valor;
+
+
     dword dir_fisica = traducir_direccion(direccion_logica, 1);
+
+    registros[MAR] = (cant_bytes << 16) | (dir_fisica & 0xFFFF);
+
     memoria_principal[dir_fisica] = valor;
 }
 
 void escribir_memoria_dword(dword direccion_logica, dword valor) {
+    registros[LAR] = direccion_logica;
+
+    registros[MBR] = valor;
 
     dword dir_fisica = traducir_direccion(direccion_logica, 4);
 
+    registros[MAR] = (cant_bytes << 16) | (dir_fisica & 0xFFFF);
 
     memoria_principal[dir_fisica] = (valor >> 24) & 0xFF;
     memoria_principal[dir_fisica + 1] = (valor >> 16) & 0xFF;
