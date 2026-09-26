@@ -85,15 +85,12 @@ bool cargarPrograma(const char *rutaArchivo) {
                         }
                      }
 
-                     // 6. Volcado de los Datos en el Segmento 1 (Data Segment)
+                     // Volcado de los Datos en el Segmento 1 (Data Segment)
                      // Construimos la direccion base 0x00010000 (Segmento 1, Offset 0)
                      dword direccionDatos = (1 << 16) | 0x0000;
                      dword desplazamiento = 0;
                      byte byteDato;
 
-                     // Como el encabezado no dice cuanto ocupan los datos, leemos en un bucle
-                     // infinito hasta que fread devuelva 0, lo que significa que chocamos contra
-                     // el final del archivo (EOF - End Of File).
                      while (fread(&byteDato, 1, 1, archivo) == 1) {
                         escribir_memoria_byte(direccionDatos + desplazamiento, byteDato);
                         desplazamiento++;

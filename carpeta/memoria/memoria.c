@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "memoria.h"
-#include "../tipos.h"
 
 byte memoria_principal[TAMANO_MEMORIA] = {0};
 
@@ -13,26 +12,27 @@ void inicializar_memoria(void){
 }
 
 void configurar_segmentos(word tamano_codigo) {
-
+    // Segmento 0 (Código): Base 0, tamaño = tamano_codigo
     tabla_segmentos[0] = (0x0000 << 16) | (tamano_codigo & 0xFFFF);
 
+    // Segmento 1 (Datos): Base = tamano_codigo, tamaño = resto de la RAM
+    dword base_datos = tamano_codigo; 
+    dword tamano_datos = 16384 - tamano_codigo;
 
-    word base_datos = tamano_codigo;
-    word tamano_datos = 16384 - tamano_codigo;
     tabla_segmentos[1] = (base_datos << 16) | (tamano_datos & 0xFFFF);
 
-
+    // Limpiar el resto de las entradas
     for (int i = 2; i < 8; i++) {
         tabla_segmentos[i] = 0xFFFFFFFF;
     }
 }
-
 
 dword traducir_direccion(dword direccion_logica, byte cant_bytes){
     word indice_segmento = (direccion_logica >> 16) & 0xFFFF; //nos quedamos con los 16 bits mas significativos
 
 
     word desplazamiento = direccion_logica & 0xFFFF; // nos quedamos con los 16 menos significativos
+
 
 
     if(indice_segmento >= 8){

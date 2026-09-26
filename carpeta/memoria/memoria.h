@@ -1,4 +1,4 @@
-#include "../tipos.h"
+#include "..\tipos.h"
 
 #define TAMANO_MEMORIA 16384
 
