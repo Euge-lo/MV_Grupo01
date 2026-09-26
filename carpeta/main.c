@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
     
     iniciar_ejecucion();
 
-   printf("Dato en memoria [0]: %08X\n", leer_memoria_dword(0x00010000)); // Lee los 4 bytes enteros
+    printf("Dato en memoria [0]: %08X\n", leer_memoria_dword(0x00010000)); // Lee los 4 bytes enteros
     printf("Dato en memoria [4]: %08X\n", leer_memoria_dword(0x00010004));
 
     return 0; // Ejecucion exitosa

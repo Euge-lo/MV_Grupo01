@@ -100,3 +100,8 @@ void escribir_memoria_dword(dword direccion_logica, dword valor) {
     memoria_principal[dir_fisica + 2] = (valor >> 8) & 0xFF;
     memoria_principal[dir_fisica + 3] = valor & 0xFF;
 }
+
+
+word obtenerTamCodigo(void) {
+    return (word)(tabla_segmentos[0] & 0xFFFF);
+}

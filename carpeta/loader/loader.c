@@ -4,9 +4,6 @@
 #include "loader.h"
 #include "../memoria/memoria.h"
 
-
-static word tamCodGuardado = 0;
-
 bool cargarPrograma(const char *rutaArchivo) {
     char firma[6] = {0}; // VMX26
     FILE *archivo = fopen(rutaArchivo, "rb");
@@ -58,7 +55,6 @@ bool cargarPrograma(const char *rutaArchivo) {
 
                   // Reconstruimos el numero de 16 bits usando algebra de bits (Big-Endian)
                   word tamCodigo = (bufferTam[0] << 8) | bufferTam[1];
-                  tamCodGuardado = tamCodigo;
                   configurar_segmentos(tamCodigo);
 
 
@@ -119,10 +115,5 @@ bool cargarPrograma(const char *rutaArchivo) {
 
       }
 
-}
-
-
-word obtenerTamCodigo(void){
-    return tamCodGuardado;
 }
 
