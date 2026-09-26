@@ -10,6 +10,44 @@ void instruccion_invalida(void){
     printf("Instruccion no registrada (OPC: %02X)\n", registros[OPC]);
 }
 
+void inicializar_tabla_funciones(void){
+    for(int i = 0; i < 32; i++){
+        tabla_funciones[i] = instruccion_invalida();
+    }
+
+    tabla_funciones[0x10] = MOV();
+    tabla_funciones[0x11] = ADD();
+    tabla_funciones[0x12] = SUB();
+    tabla_funciones[0x13] = MUL();
+    tabla_funciones[0x14] = DIV();
+    tabla_funciones[0x15] = CMP();
+    tabla_funciones[0x16] = AND();
+    tabla_funciones[0x17] = OR();
+    tabla_funciones[0x18] = XOR();
+    tabla_funciones[0x19] = SWAP();
+    tabla_funciones[0x1A] = SHL();
+    tabla_funciones[0x1B] = SHR();
+    tabla_funciones[0x1C] = SAR();
+    tabla_funciones[0x1D] = LDL();
+    tabla_funciones[0x1E] = LDH();
+    tabla_funciones[0x1F] = RND();
+    tabla_funciones[0x00] = SYS();
+    tabla_funciones[0x01] = JMP();
+    tabla_funciones[0x02] = JP();
+    tabla_funciones[0x03] = JN();
+    tabla_funciones[0x04] = JZ();
+    tabla_funciones[0x05] = JC();
+    tabla_funciones[0x06] = JV();
+    tabla_funciones[0x07] = JNP();
+    tabla_funciones[0x08] = JNN();
+    tabla_funciones[0x09] = JNZ());
+    tabla_funciones[0x0A] = NOT();
+    tabla_funciones[0x0F] = STOP();
+
+
+
+}
+
 dword registros[32] = {0};
 
 void inicializar_registros(void){

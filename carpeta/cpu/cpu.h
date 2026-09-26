@@ -35,6 +35,7 @@
 extern dword registros[32];
 
 void instruccion_invalida(void);
+void inicializar_tabla_funciones(void);
 void inicializar_registros(void);
 dword leer_valor_operando(byte tipo);
 void iniciar_ejecucion(void);
