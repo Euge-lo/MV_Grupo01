@@ -162,26 +162,40 @@ void DIV(void){
         b = getOperando(registros[OP2]);
 
         if(b != 0){
-            aux = a / b;
-            aux64 = (int64_t)(int32_t)a / (int32_t)b;
 
-            setOperando(registros[OP1], aux);
+            if (a == (int32_t)0x80000000 && b == -1) {
+            registros[OP1] = 0x80000000; 
+            registros[AC] = 0;
 
-            registros[AC] = (int32_t)a % (int32_t)b;
-            registros[CC] &= ~(FLAG_N | FLAG_Z | FLAG_C | FLAG_V);
-
-            if ((int32_t)aux < 0)
-                registros[CC] |= FLAG_N;
-            else
-                if (aux == 0)
-                    registros[CC] |= FLAG_Z;
-
-            if (aux64 != aux) {    //limites de 32 bits
-                registros[CC] |= FLAG_C;        //-2147483648 / -1 -> hace 2147483648 / 4294967295 que da 0 y deberia dar 2147483648
-                registros[CC] |= FLAG_V;
+            // carry / overflow                         
+            registros[CC] |= FLAG_C;    
+            registros[CC] |= FLAG_V;
             }
+            else{
+                aux = a / b;
+                aux64 = (int64_t)(int32_t)a / (int32_t)b;
+
+                setOperando(registros[OP1], aux);
+
+                registros[AC] = (int32_t)a % (int32_t)b;
+                registros[CC] &= ~(FLAG_N | FLAG_Z | FLAG_C | FLAG_V);
+
+                if ((int32_t)aux < 0)
+                    registros[CC] |= FLAG_N;
+                else
+                    if (aux == 0)
+                        registros[CC] |= FLAG_Z;
+
+                if (aux64 != aux) {    //limites de 32 bits
+                    registros[CC] |= FLAG_C;        //-2147483648 / -1 -> hace 2147483648 / 4294967295 que da 0 y deberia dar 2147483648
+                    registros[CC] |= FLAG_V;
+                }
+            }
+
+            
         }
         else{
+
             printf("\nError: Division por cero.");
             registros[IP] = 0xFFFFFFFF;
             return;
