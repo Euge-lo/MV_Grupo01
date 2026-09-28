@@ -164,11 +164,11 @@ void DIV(void){
         if(b != 0){
 
             if (a == (int32_t)0x80000000 && b == -1) {
-            registros[OP1] = 0x80000000; 
+            registros[OP1] = 0x80000000;
             registros[AC] = 0;
 
-            // carry / overflow                         
-            registros[CC] |= FLAG_C;    
+            // carry / overflow
+            registros[CC] |= FLAG_C;
             registros[CC] |= FLAG_V;
             }
             else{
@@ -192,7 +192,7 @@ void DIV(void){
                 }
             }
 
-            
+
         }
         else{
 
@@ -527,11 +527,11 @@ void RND(void){     //carga en OP1 un valor entre 0 y b
 
 void SYS(void){
     dword a,cantDatos,tamano,aux,modo,posInicial,dirLogica,dirFisica,dato;
-    int i,bitsTot;
+    int i,j,bitsTot;
     char strBin[MAXCADENABINARIA];
 
     a = getOperando(registros[OP1]);
-    
+
     aux = registros[ECX];
     modo = registros[EAX];
     posInicial = registros[EDX];
@@ -546,20 +546,20 @@ void SYS(void){
             printf("\n[%04X]: ",dirFisica);
 
             switch(modo){
-                case 16:scanf("%s",strBin);             
+                case 16:scanf("%s",strBin);
                         dato = strtol(strBin,NULL,2);
                         break;
-                case 8: scanf("%x", &dato);        
+                case 8: scanf("%x", &dato);
                         break;
-                case 4: scanf("%o", &dato);            
+                case 4: scanf("%o", &dato);
                         break;
                 case 2: {
                         char temp;
-                        scanf(" %c", &temp);            
+                        scanf(" %c", &temp);
                         dato = temp;
                         break;
                 }
-                case 1: scanf("%d", &dato);                                
+                case 1: scanf("%d", &dato);
                         break;
                 default: printf("\nError: Modo de lectura erróneo.");
                         break;
@@ -590,28 +590,28 @@ void SYS(void){
 
             registros[MBR] = dato;
 
-            if (modo & 0x01)            
+            if (modo & 0x01)
                 printf("%d \n", dato);
-            if (modo & 0x02)            
+            if (modo & 0x02)
                 if (isprint(dato))
                     printf("%c \n",dato);
                 else
                     printf(". \n ");
-            if (modo & 0x04)            
+            if (modo & 0x04)
                 printf("%o \n", dato);
-            if (modo & 0x08)            
+            if (modo & 0x08)
                 printf("%X \n", dato);
-            if (modo & 0x10){          
+            if (modo & 0x10){
                 bitsTot = tamano * 8;
                 printf("0b");
-                for (i = bitsTot - 1; i >= 0; i--)
-                    printf("%d", (dato >> i) & 1);
+                for (j = bitsTot - 1; j >= 0; j--)
+                    printf("%d", (dato >> j) & 1);
                 printf("\n");
             }
         }
     } else {
-        printf("\nError: Llamada al sistema invalida");
-        registros[IP] = 0xFFFFFFFF;
+       // printf("\nError: Llamada al sistema invalida");
+        //registros[IP] = 0xFFFFFFFF; //Lo dejamos comentado por el sys 0x15
         return;
     }
 }
@@ -781,7 +781,7 @@ void setOperando(dword operando, dword valor) {
             valSig = (int32_t)(val << 8) >> 16;        // offset
             dirLog = registros[codReg] + valSig;       // La dirección lógica = base + desplazamiento
 
-            registros[LAR] = dirLog;     
+            registros[LAR] = dirLog;
             registros[MBR] = valor;
             escribir_memoria_dword(dirLog, valor);
         }
