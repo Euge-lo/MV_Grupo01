@@ -97,7 +97,7 @@ void SUB(void){
             if (aux == 0)
                 registros[CC] |= FLAG_Z;
 
-        if (aux64SinSigno >> 32 & 0x00000000FFFFFFFF)                //hubo carry
+        if (!(aux64SinSigno >> 32))                //hubo carry
             registros[CC] |= FLAG_C;
 
         if(aux != aux64)   //positivo - negativo = neg o negativo - positivo = positivo
@@ -229,7 +229,7 @@ void CMP(void){
         if (aux == 0)
             registros[CC] |= FLAG_Z;
 
-    if (aux64SinSigno >> 32 & 0x00000000FFFFFFFF)                 //hubo carry
+    if (!(aux64SinSigno >> 32))                 //hubo carry
         registros[CC] |= FLAG_C;
 
     if(aux64 != aux)  //positivo - negativo dieron neg o negativo - positivo dio positivo
@@ -527,7 +527,7 @@ void RND(void){     //carga en OP1 un valor entre 0 y b
 
 void SYS(void){
     dword a,cantDatos,tamano,aux,modo,posInicial,dirLogica,dirFisica,dato;
-    int i,j,bitsTot;
+    int i,j,bitsTot,empezo;
     char strBin[MAXCADENABINARIA];
 
     a = getOperando(registros[OP1]);
@@ -585,8 +585,15 @@ void SYS(void){
 
             if(tamano == 1)
                 dato = leer_memoria_byte(dirLogica);
-            else if(tamano == 4)
-                dato = leer_memoria_dword(dirLogica);
+            else
+                if(tamano == 2) {
+                    byte b1 = leer_memoria_byte(dirLogica);
+                    byte b2 = leer_memoria_byte(dirLogica + 1);
+                    dato = (b1 << 8) | b2;
+                }
+                else
+                    if(tamano == 4)
+                        dato = leer_memoria_dword(dirLogica);
 
             registros[MBR] = dato;
 
@@ -601,16 +608,22 @@ void SYS(void){
                 printf("%o \n", dato);
             if (modo & 0x08)
                 printf("%X \n", dato);
-            if (modo & 0x10){
-                bitsTot = tamano * 8;
+            if (modo & 0x10) {          // binario
                 printf("0b");
-                for (j = bitsTot - 1; j >= 0; j--)
-                    printf("%d", (dato >> j) & 1);
-                printf("\n");
+                if (dato == 0)
+                    printf("0");
+                else {
+                    empezo = 0;
+                    for (j = 31; j >= 0; j--) {
+                        if ((dato >> j) & 1) empezo = 1;
+                        if (empezo) printf("%d", (dato >> j) & 1);
+                    }
+                }
+                printf("\n ");
             }
         }
     } else {
-       // printf("\nError: Llamada al sistema invalida");
+        // printf("\nError: Llamada al sistema invalida");
         //registros[IP] = 0xFFFFFFFF; //Lo dejamos comentado por el sys 0x15
         return;
     }

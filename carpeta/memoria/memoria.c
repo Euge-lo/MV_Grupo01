@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "memoria.h"
+#include "..\cpu\cpu.h"
 
 byte memoria_principal[TAMANO_MEMORIA] = {0};
 
@@ -16,7 +17,7 @@ void configurar_segmentos(word tamano_codigo) {
     tabla_segmentos[0] = (0x0000 << 16) | (tamano_codigo & 0xFFFF);
 
     // Segmento 1 (Datos): Base = tamano_codigo, tamaño = resto de la RAM
-    dword base_datos = tamano_codigo; 
+    dword base_datos = tamano_codigo;
     dword tamano_datos = 16384 - tamano_codigo;
 
     tabla_segmentos[1] = (base_datos << 16) | (tamano_datos & 0xFFFF);
@@ -74,7 +75,7 @@ byte leer_memoria_byte(dword direccion_logica){
 dword leer_memoria_dword(dword direccion_logica){
     dword dir_fisica = traducir_direccion(direccion_logica, 4);
 
-
+    registros[MAR] = (4 << 16) | (dir_fisica & 0xFFFF); //4 por la cant de bytes a guardar
 
     byte b1 = memoria_principal[dir_fisica];
     byte b2 = memoria_principal[dir_fisica + 1];
@@ -94,6 +95,7 @@ void escribir_memoria_dword(dword direccion_logica, dword valor) {
 
     dword dir_fisica = traducir_direccion(direccion_logica, 4);
 
+    registros[MAR] = (4 << 16) | (dir_fisica & 0xFFFF); //4 por la cant de bytes a guardar
 
     memoria_principal[dir_fisica] = (valor >> 24) & 0xFF;
     memoria_principal[dir_fisica + 1] = (valor >> 16) & 0xFF;

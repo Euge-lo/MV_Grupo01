@@ -83,7 +83,7 @@ dword leer_valor_operando(byte tipo){
             byte b1 = leer_memoria_byte(registros[IP]);
             byte b2 = leer_memoria_byte(registros[IP]+1);
             byte b3 = leer_memoria_byte(registros[IP]+2);
-            valor = (b1 << 16) | (b2 << 8) | (b3 & 0x1F);
+            valor = (b1 << 16) | (b2 << 8) | b3;
             registros[IP] += 3;
             break;
         }
@@ -101,7 +101,7 @@ void iniciar_ejecucion(void){
     printf("Iniciando ejecucion\n");
 
     word tamano_codigo = obtenerTamCodigo();
-    
+
     while(registros[IP] != 0xFFFFFFFF && registros[IP] < tamano_codigo){
         byte primer_byte = leer_memoria_byte(registros[IP]);
 
