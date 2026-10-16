@@ -42,6 +42,10 @@ void inicializar_tabla_funciones(void){
     tabla_funciones[0x08] = JNN;
     tabla_funciones[0x09] = JNZ;
     tabla_funciones[0x0A] = NOT;
+    tabla_funciones[0x0B] = PUSH;
+    tabla_funciones[0x0C] = POP;
+    tabla_funciones[0x0D] = CALL;
+    tabla_funciones[0x0E] = RET;
     tabla_funciones[0x0F] = STOP;
 
 

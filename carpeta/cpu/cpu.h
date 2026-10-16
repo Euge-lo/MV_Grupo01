@@ -11,6 +11,10 @@
 #define MAR 5
 #define MBR 6
 
+//registros de pila
+#define SP 7
+#define BP 8
+
 //registros generales
 #define EAX 10
 #define EBX 11
@@ -26,6 +30,10 @@
 //registros de segmentos
 #define CS 26
 #define DS 27
+#define ES 28
+#define SS 29
+#define KS 30
+#define PS 31
 
 #define FLAG_N 0x80000000
 #define FLAG_Z 0x40000000
