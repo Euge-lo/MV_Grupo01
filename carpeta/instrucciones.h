@@ -37,9 +37,13 @@ void JNP(void);
 void JNN(void);
 void JNZ(void);
 void NOT(void);
+void PUSH(void);
+void POP(void);
+void CALL(void);
 
 //instrucción sin operandos
 void STOP(void);
+void RET(void);
 
 //get y set
 

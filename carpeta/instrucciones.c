@@ -3,7 +3,7 @@
 #include "memoria/memoria.h"
 #include "instrucciones.h"
 #include <stdio.h>
-#include <stdlib.h>     //para RND()
+#include <stdlib.h>     //para RND() y clear screen
 #include <ctype.h>     //para isprint() en SYS()
 
 //instrucciones con 2 operandos
@@ -539,30 +539,35 @@ void SYS(void){
     cantDatos = aux & 0x0000FFFF;
     tamano = (aux >> 16) & 0x0000FFFF;
 
-    if(a == 1) {   // lectura
-        for(i=0; i < cantDatos; i++){
-            dirLogica = posInicial + (tamano*i);
-            dirFisica = traducir_direccion(dirLogica,tamano);
-            printf("\n[%04X]: ",dirFisica);
+    switch(a) {
+        case 0:                             //clear screen
+            system("cls || clear");
+            break;
 
-            switch(modo){
-                case 16:scanf("%s",strBin);
-                        dato = strtol(strBin,NULL,2);
-                        break;
-                case 8: scanf("%x", &dato);
-                        break;
-                case 4: scanf("%o", &dato);
-                        break;
-                case 2: {
-                        char temp;
-                        scanf(" %c", &temp);
-                        dato = temp;
-                        break;
-                }
-                case 1: scanf("%d", &dato);
-                        break;
-                default: printf("\nError: Modo de lectura erróneo.");
-                        break;
+        case 1:                             //lectura
+            for(i=0; i < cantDatos; i++){
+                dirLogica = posInicial + (tamano*i);
+                dirFisica = traducir_direccion(dirLogica,tamano);
+                printf("\n[%04X]: ",dirFisica);
+
+                switch(modo){
+                    case 16:scanf("%s",strBin);
+                            dato = strtol(strBin,NULL,2);
+                            break;
+                    case 8: scanf("%x", &dato);
+                            break;
+                    case 4: scanf("%o", &dato);
+                            break;
+                    case 2: {
+                            char temp;
+                            scanf(" %c", &temp);
+                            dato = temp;
+                            break;
+                    }
+                    case 1: scanf("%d", &dato);
+                            break;
+                    default: printf("\nError: Modo de lectura erróneo.");
+                            break;
             }
 
             registros[LAR] = dirLogica;
@@ -573,60 +578,64 @@ void SYS(void){
                 escribir_memoria_byte(dirLogica,(byte)dato);
             else if(tamano == 4)
                 escribir_memoria_dword(dirLogica,dato);
-        }
-    } else if (a == 2){     // escritura
-        for(i = 0; i < cantDatos; i++){
-            dirLogica = posInicial + (tamano*i);
-            dirFisica = traducir_direccion(dirLogica,tamano);
-            printf("\n[%04X]: ",dirFisica);
 
-            registros[LAR] = dirLogica;
-            registros[MAR] = (tamano << 16) | (dirFisica & 0xFFFF);
+            break;
 
-            if(tamano == 1)
-                dato = leer_memoria_byte(dirLogica);
-            else
-                if(tamano == 2) {
-                    byte b1 = leer_memoria_byte(dirLogica);
-                    byte b2 = leer_memoria_byte(dirLogica + 1);
-                    dato = (b1 << 8) | b2;
-                }
+        case 2:                                 //escritura
+            for(i = 0; i < cantDatos; i++){
+                dirLogica = posInicial + (tamano*i);
+                dirFisica = traducir_direccion(dirLogica,tamano);
+                printf("\n[%04X]: ",dirFisica);
+
+                registros[LAR] = dirLogica;
+                registros[MAR] = (tamano << 16) | (dirFisica & 0xFFFF);
+
+                if(tamano == 1)
+                    dato = leer_memoria_byte(dirLogica);
                 else
-                    if(tamano == 4)
-                        dato = leer_memoria_dword(dirLogica);
-
-            registros[MBR] = dato;
-
-            if (modo & 0x01)
-                printf("%d \n", dato);
-            if (modo & 0x02)
-                if (isprint(dato))
-                    printf("%c \n",dato);
-                else
-                    printf(". \n ");
-            if (modo & 0x04)
-                printf("%o \n", dato);
-            if (modo & 0x08)
-                printf("%X \n", dato);
-            if (modo & 0x10) {          // binario
-                printf("0b");
-                if (dato == 0)
-                    printf("0");
-                else {
-                    empezo = 0;
-                    for (j = 31; j >= 0; j--) {
-                        if ((dato >> j) & 1) empezo = 1;
-                        if (empezo) printf("%d", (dato >> j) & 1);
+                    if(tamano == 2) {
+                        byte b1 = leer_memoria_byte(dirLogica);
+                        byte b2 = leer_memoria_byte(dirLogica + 1);
+                        dato = (b1 << 8) | b2;
                     }
+                    else
+                        if(tamano == 4)
+                            dato = leer_memoria_dword(dirLogica);
+
+                registros[MBR] = dato;
+
+                if (modo & 0x01)
+                    printf("%d \n", dato);
+                if (modo & 0x02)
+                    if (isprint(dato))
+                        printf("%c \n",dato);
+                    else
+                        printf(". \n ");
+                if (modo & 0x04)
+                    printf("%o \n", dato);
+                if (modo & 0x08)
+                    printf("%X \n", dato);
+                if (modo & 0x10) {          // binario
+                    printf("0b");
+                    if (dato == 0)
+                        printf("0");
+                    else {
+                        empezo = 0;
+                        for (j = 31; j >= 0; j--) {
+                            if ((dato >> j) & 1) empezo = 1;
+                            if (empezo) printf("%d", (dato >> j) & 1);
+                        }
+                    }
+                    printf("\n ");
                 }
-                printf("\n ");
             }
-        }
-    } else {
-        // printf("\nError: Llamada al sistema invalida");
-        //registros[IP] = 0xFFFFFFFF; //Lo dejamos comentado por el sys 0x15
-        return;
-    }
+            break;
+
+        default:
+            printf("\nError: Llamada al sistema invalida");
+            registros[IP] = 0xFFFFFFFF;
+            return;
+            break;
 }
 
 void JMP(void){
@@ -736,36 +745,101 @@ void NOT(void){
     }
 }
 
+
+void PUSH(void) {
+    dword a;
+
+    a = getOperando(registros[OP1]);      //getOperando ya devuelve 4B (dword)
+    registros[SP] -= 4;
+    if (registros[SP] < registros[SS]) {    //verifico stack overflow
+        printf("\nError: STACK OVERFLOW. La pila excedió su límite.");
+        registros[IP] = 0xFFFFFFFF;
+        return;
+    }
+    else{
+        registros[LAR] = registros[SP];
+        registros[MBR] = a;
+        escribir_memoria_dword(registros[SP], a); //escribir_memoria:dword ya guarda en formato big-endian
+    }
+}
+
+void POP(void){
+    dword a, codSegmento, offset, tamSegmento;
+
+    codSegmento = registros[SP] >> 16;      //dirs lógicas: 2B código de segmento y 2B offset
+    offset = registros[SP] & 0xFFFF;
+    tamSegmento = tabla_segmentos[codSegmento] & 0xFFFF; //tamaño de segmento en los 2B más signif.
+
+    if (offset + 4 > tamSegmento) {
+        printf("\nError: STACK UNDERFLOW. La pila está vacía o no tiene bytes suficientes.");
+        registros[IP] = 0xFFFFFFFF;
+        return;
+    }
+    else{
+        registros[LAR] = registros[SP]; // saco los 4B del tope de la pila, SP es la dir lógica
+        a = leer_memoria_dword(registros[SP]);
+        registros[MBR] = val;
+        setOperando(registros[OP1], a); //paso el valor al operando
+        registros[SP] += 4;
+    }
+}
+
+void CALL(void){
+
+}
+
 //instrucción sin operandos
 
 void STOP(void){
     registros[IP] = 0xFFFFFFFF;
 }
 
+void RET(void){}
+
 dword getOperando(dword operando) {
     dword tipo, valor, dirLog, aux;
     int32_t valSig;
-    byte codReg = 0;
+    byte codReg = 0, tam = 4, sector = 0;
 
     tipo = operando >> TRESBYTES;
     valor = operando & 0x00FFFFFF; // FFFFFF00
 
-    if (tipo == 2) {
+    if (tipo == 2)
         valSig = (int32_t)(valor << 16) >> 16; // Inmediatos (16 bits en la parte baja)
-    } else {
+    else
         valSig = (int32_t)(valor << 8) >> 16;  // Memoria (offset de 16 bits en la parte alta)
-    }
 
     if (tipo == 1 || tipo == 3) // Aislo el código de registro
         codReg = valor & 0x1F;
 
     switch (tipo) {
-        case 1: aux = registros[codReg];   // Valor del registro
+        case 1: sector = (valor >> 5) & 0x03; //Valor del registro
+                if (sector == 0)
+                    aux = registros[codReg];                                 // EAX (4 bytes)
+                else
+                    if (sector == 1)
+                        aux = (int32_t)(int8_t)(registros[codReg] & 0xFF);       // AL (1 byte con signo)
+                    else
+                        if (sector == 2)
+                            aux = (int32_t)(int8_t)((registros[codReg] >> 8) & 0xFF);// AH (1 byte con signo)
+                        else
+                            if (sector == 3)
+                                aux = (int32_t)(int16_t)(registros[codReg] & 0xFFFF);    // AX (2 bytes con signo)
                 break;
         case 2: aux = valSig;              // Valor inmediato (conservo el signo, ya viene el valor directo)
                 break;
-        case 3: dirLog = registros[codReg] + valSig;    // Calculo la dirección lógica y leo la RAM
-                aux = leer_memoria_dword(dirLog);
+        case 3: tam = (valor >> 5) & 0x07; // Extraemos bits 5 a 7[cite: 14]
+                dirLog = registros[codReg] + valSig;    // Calculo la dirección lógica y leo la RAM
+
+                registros[LAR] = dirLog;
+                if (tam == 1)          //leo según el tamaño
+                    aux = (int32_t)(int8_t)leer_memoria_byte(dirLog); // Extiendo el signo a 4 bytes
+                else
+                    if (tam == 2)
+                        aux = (int32_t)(int16_t)leer_memoria_word(dirLog); //Extiendo el signo a 4 bytes
+                    else
+                        if (tam == 4)
+                            aux = leer_memoria_dword(dirLog);
                 break;
 
         default:printf("\nError, tipo de operando no existente.");
@@ -779,7 +853,7 @@ dword getOperando(dword operando) {
 void setOperando(dword operando, dword valor) {
     dword tipo, val, dirLog;
     int32_t valSig;
-    byte codReg = 0;
+    byte codReg = 0, tam = 4, sector; //tamaño por default de 4
 
     tipo = operando >> TRESBYTES;
     val = operando & 0x00FFFFFF;
@@ -787,16 +861,38 @@ void setOperando(dword operando, dword valor) {
     if (tipo == 1 || tipo == 3)
         codReg = val & 0x1F;
 
-    if (tipo == 1)              // Escritura directa en registro del procesador
-        registros[codReg] = valor;
+    if (tipo == 1){              // Escritura directa en registro del procesador
+        sector = (val >> 5) & 0x03;
+        switch (sector){
+            case 0: registros[codReg] = valor;  //reg de 4 bytes
+                    break;
+            case 1: registros[codReg] = (registros[codReg] & 0xFFFFFF00) | (valor & 0xFF);  //inserto el valor en el byte más bajo
+                    break;
+            case 2: registros[codReg] = (registros[codReg] & 0xFFFF00FF) | ((valor & 0xFF) << 8); //inserto el valor en el 3er byte
+                    break;
+            case 3: registros[codReg] = (registros[codReg] & 0xFFFF0000) | (valor & 0xFFFF); //reg de 2B
+                    break;
+            default: break;
+        }
+    }
     else
-        if (tipo == 3) {     // Escritura física en memoria (RAM)
+        if (tipo == 3) {     // Escritura física en memoria ppal (RAM)
             valSig = (int32_t)(val << 8) >> 16;        // offset
             dirLog = registros[codReg] + valSig;       // La dirección lógica = base + desplazamiento
 
+            tam = (val >> 5) & 0x07;
+
             registros[LAR] = dirLog;
             registros[MBR] = valor;
-            escribir_memoria_dword(dirLog, valor);
+
+            if (tam == 1)           // Escribe truncando según el tamaño
+                escribir_memoria_byte(dirLog, (byte)valor);
+            else
+                if (tam == 2)    // ARMAR ESCRIBIR_MEMORIA_WORD() para 2 bytes!!!!!!!!!!!!!!!!
+                    escribir_memoria_word(dirLog,(word)valor)
+                else
+                    if (tam == 4)
+                        escribir_memoria_dword(dirLog, valor);
         }
     // El tipo inmediato no llega hasta acá, las funciones que almacenan datos en registros[OP1] no hacen nada si hubo un inmediato
 }
