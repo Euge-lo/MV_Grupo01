@@ -88,6 +88,7 @@ dword leer_memoria_dword(dword direccion_logica){
 void escribir_memoria_byte(dword direccion_logica, byte valor) {
 
     dword dir_fisica = traducir_direccion(direccion_logica, 1);
+    registros[MAR] = (1 << 16) | (dir_fisica & 0xFFFF);
     memoria_principal[dir_fisica] = valor;
 }
 
