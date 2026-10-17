@@ -72,6 +72,18 @@ byte leer_memoria_byte(dword direccion_logica){
     return memoria_principal[dir_fisica];
 }
 
+word leer_memoria_word(dword direccion_logica){
+    dword dir_fisica = traducir_direccion(direccion_logica, 2);
+
+    registros[MAR] = (2 << 16) | (dir_fisica & 0xFFFF); //tamaño en la parte alta, dirFísica en la baja
+
+    byte b1 = memoria_principal[dir_fisica];
+    byte b2 = memoria_principal[dir_fisica + 1];
+
+    return (b1 << 8) | b2;
+}
+
+
 dword leer_memoria_dword(dword direccion_logica){
     dword dir_fisica = traducir_direccion(direccion_logica, 4);
 
@@ -90,6 +102,14 @@ void escribir_memoria_byte(dword direccion_logica, byte valor) {
     dword dir_fisica = traducir_direccion(direccion_logica, 1);
     registros[MAR] = (1 << 16) | (dir_fisica & 0xFFFF);
     memoria_principal[dir_fisica] = valor;
+}
+
+void escribir_memoria_word(dword direccion_logica, word valor){
+    dword dir_fisica = traducir_direccion(direccion_logica, 2);
+    registros[MAR] = (2 << 16) | (dir_fisica & 0xFFFF);
+
+    memoria_principal[dir_fisica] = (valor >> 8) & 0xFF;
+    memoria_principal[dir_fisica + 1] = valor & 0xFF;
 }
 
 void escribir_memoria_dword(dword direccion_logica, dword valor) {
