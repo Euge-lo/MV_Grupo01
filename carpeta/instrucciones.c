@@ -527,8 +527,9 @@ void RND(void){     //carga en OP1 un valor entre 0 y b
 
 void SYS(void){
     dword a,cantDatos,tamano,aux,modo,posInicial,dirLogica,dirFisica,dato;
-    int i,j,bitsTot,empezo;
-    char strBin[MAXCADENABINARIA];
+    int i,j,bitsTot,empezo,limite,cont;
+    char strBin[MAXCADENABINARIA],c;
+    byte car;
 
     a = getOperando(registros[OP1]);
 
@@ -631,6 +632,37 @@ void SYS(void){
             }
             break;
 
+        case 3: limite = registros[ECX];                    //STRING READ
+                dirLogica = registros[EDX]; // Puntero inicial
+                cont = 0;
+
+                while ((c = getchar()) == '\n' || c == EOF);    // Limpio el buffer por si quedó un salto de línea (\n) de ingresos previos
+
+                while (c != '\n' && c != EOF) {             // Lee hasta que el usuario presione Enter
+                    if (limite == -1 || cont < limite) {    // si no hay límite (-1) o si todavía no se pasó
+                        escribir_memoria_byte(dirLogica, (byte)c);
+                        dirLogica++;
+                        cont++;
+                    }
+                    c = getchar();
+                }
+                escribir_memoria_byte(dirLogica, 0x00); // Cargo el byte nulo '\0' al final del string
+                break;
+
+        case 4: dirLogica = registros[EDX];     // Inicia en la pos apuntada por EDX             //STRING WRITE
+                car = leer_memoria_byte(dirLogica);
+
+                while (car != 0x00) {
+                    printf("%c", car);
+                    dirLogica++;
+                    car = leer_memoria_byte(dirLogica);
+                }
+                break;
+
+        case 15:if (archivo_vmi_activo)
+                    generar_breakpoint();
+                break;
+
         default:
             printf("\nError: Llamada al sistema invalida");
             registros[IP] = 0xFFFFFFFF;
@@ -642,7 +674,7 @@ void JMP(void){
     dword offset;
 
     offset = getOperando(registros[OP1]);
-    registros[IP] = offset; //celda: 2B para segmento y 2B para offset
+    registros[IP] = (registros[IP] & 0xFFFF0000) | (offset & 0x0000FFFF); //Code Segment en los 16 bits más significativos y offset en los 16 bits menos significativos
 }
 
 //asumo que los guiones en el cuadro ej de la consigna pueden ser 1 o 0, asique apago bits con las máscaras
@@ -652,7 +684,7 @@ void JP(void){
 
     if((registros[CC] & (FLAG_N | FLAG_Z)) == 0){
         offset = getOperando(registros[OP1]);
-        registros[IP] = offset;
+        registros[IP] = (registros[IP] & 0xFFFF0000) | (offset & 0x0000FFFF);
     }
 }
 
@@ -661,7 +693,7 @@ void JN(void){
 
     if((registros[CC] & (FLAG_N | FLAG_Z)) == FLAG_N){
         offset = getOperando(registros[OP1]);
-        registros[IP] = offset;
+        registros[IP] = (registros[IP] & 0xFFFF0000) | (offset & 0x0000FFFF);
     }
 }
 
@@ -670,7 +702,7 @@ void JZ(void){
 
     if((registros[CC] & (FLAG_N | FLAG_Z)) == FLAG_Z){
         offset = getOperando(registros[OP1]);
-        registros[IP] = offset;
+        registros[IP] = (registros[IP] & 0xFFFF0000) | (offset & 0x0000FFFF);
     }
 }
 
@@ -679,7 +711,7 @@ void JC(void){
 
     if((registros[CC] & FLAG_C) == FLAG_C){
         offset = getOperando(registros[OP1]);
-        registros[IP] = offset;
+        registros[IP] = (registros[IP] & 0xFFFF0000) | (offset & 0x0000FFFF);
     }
 }
 
@@ -688,7 +720,7 @@ void JV(void){
 
     if((registros[CC] & FLAG_V) == FLAG_V){
         offset = getOperando(registros[OP1]);
-        registros[IP] = offset;
+        registros[IP] = (registros[IP] & 0xFFFF0000) | (offset & 0x0000FFFF);
     }
 }
 
@@ -697,7 +729,7 @@ void JNP(void){
 
     if(((registros[CC] & FLAG_N) == FLAG_N)||((registros[CC] & FLAG_Z) == FLAG_Z)){
         offset = getOperando(registros[OP1]);
-        registros[IP] = offset;
+        registros[IP] = (registros[IP] & 0xFFFF0000) | (offset & 0x0000FFFF);
     }
 }
 
@@ -706,7 +738,7 @@ void JNN(void){
 
     if((registros[CC] & FLAG_N) == 0){
         offset = getOperando(registros[OP1]);
-        registros[IP] = offset;
+        registros[IP] = (registros[IP] & 0xFFFF0000) | (offset & 0x0000FFFF);
     }
 }
 
@@ -715,7 +747,7 @@ void JNZ(void){
 
     if((registros[CC] & FLAG_Z) == 0){
         offset = getOperando(registros[OP1]);
-        registros[IP] = offset;
+        registros[IP] = (registros[IP] & 0xFFFF0000) | (offset & 0x0000FFFF);
     }
 }
 
@@ -778,14 +810,28 @@ void POP(void){
     else{
         registros[LAR] = registros[SP]; // saco los 4B del tope de la pila, SP es la dir lógica
         a = leer_memoria_dword(registros[SP]);
-        registros[MBR] = val;
+        registros[MBR] = a;
         setOperando(registros[OP1], a); //paso el valor al operando
         registros[SP] += 4;
     }
 }
 
-void CALL(void){
+void CALL(void){    //idem PUSH IP
+    dword salto;
 
+    salto = getOperando(registros[OP1]);      //valor de la prox subrutina
+    registros[SP] -= 4;
+    if (registros[SP] < registros[SS]) {    //verifico stack overflow
+        printf("\nError: STACK OVERFLOW. La pila excedió su límite.");
+        registros[IP] = 0xFFFFFFFF;
+        return;
+    }
+    else{
+        registros[LAR] = registros[SP];
+        registros[MBR] = registros[IP];
+        escribir_memoria_dword(registros[SP], registros[IP]); //guardo el valor del IP
+        registros[IP] = salto;  //JUMP subrutina
+    }
 }
 
 //instrucción sin operandos
@@ -794,7 +840,26 @@ void STOP(void){
     registros[IP] = 0xFFFFFFFF;
 }
 
-void RET(void){}
+void RET(void){         //idem POP IP
+    dword a, codSegmento, offset, tamSegmento;
+
+    codSegmento = registros[SP] >> 16;      //dirs lógicas: 2B código de segmento y 2B offset
+    offset = registros[SP] & 0xFFFF;
+    tamSegmento = tabla_segmentos[codSegmento] & 0xFFFF; //tamaño de segmento en los 2B más signif.
+
+    if (offset + 4 > tamSegmento) {
+        printf("\nError: STACK UNDERFLOW. La pila está vacía o no tiene bytes suficientes.");
+        registros[IP] = 0xFFFFFFFF;
+        return;
+    }
+    else{                               //extraigo IP del tope de la pila
+        registros[LAR] = registros[SP]; // saco los 4B del tope de la pila, SP es la dir lógica
+        registros[IP] = leer_memoria_dword(registros[SP]);
+        registros[MBR] = registros[IP];
+
+        registros[SP] += 4;
+    }
+}
 
 dword getOperando(dword operando) {
     dword tipo, valor, dirLog, aux;
@@ -888,8 +953,8 @@ void setOperando(dword operando, dword valor) {
             if (tam == 1)           // Escribe truncando según el tamaño
                 escribir_memoria_byte(dirLog, (byte)valor);
             else
-                if (tam == 2)    // ARMAR ESCRIBIR_MEMORIA_WORD() para 2 bytes!!!!!!!!!!!!!!!!
-                    escribir_memoria_word(dirLog,(word)valor)
+                if (tam == 2)
+                    escribir_memoria_word(dirLog,(word)valor);
                 else
                     if (tam == 4)
                         escribir_memoria_dword(dirLog, valor);
