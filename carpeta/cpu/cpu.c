@@ -53,18 +53,25 @@ void inicializar_tabla_funciones(void){
 }
 
 dword registros[32] = {0};
+int pausa_sistema = 0;
 
-void inicializar_registros(void){
-    for(int i = 0; i < 32; i++)
-        registros[i] = 0;
+void inicializar_registros(dword entry_point){
+    for(int i = 0; i < 32; i++) {
+        if (i != CS && i != DS && i != ES && i != SS && i != KS && i != PS && i != SP) {
+            registros[i] = 0;
+        }
+    }
 
-    registros[CS] = 0x00000000;
+    if (registros[CS] != 0xFFFFFFFF) {
+        registros[IP] = registros[CS] + entry_point;
+    } else {
+        registros[IP] = 0xFFFFFFFF;
+    }
 
-    registros[DS] = (1 << 16) | 0x0000;
-
-    registros[IP] = registros[CS];
-
-    printf("Procesador inicializado. CS: %08X | DS: %08X | IP %08X\n", registros[CS], registros[DS], registros[IP]);
+    printf("--- Procesador Inicializado ---\n");
+    printf("Segmentos -> PS: %08X | KS: %08X | CS: %08X | DS: %08X | ES: %08X | SS: %08X\n", registros[PS], registros[KS], registros[CS], registros[DS], registros[ES], registros[SS]);
+    printf("Punteros  -> IP: %08X | SP: %08X\n", registros[IP], registros[SP]);
+    printf("-------------------------------\n");
 }
 
 dword leer_valor_operando(byte tipo){
@@ -107,6 +114,28 @@ void iniciar_ejecucion(void){
     word tamano_codigo = obtenerTamCodigo();
 
     while(registros[IP] != 0xFFFFFFFF && registros[IP] < tamano_codigo){
+
+        if (pausa_interactiva) {
+            
+            printf("\n[BREAKPOINT] IP: %04X | Presione 'g' (Go), 'q' (Quit) o 'Enter' (Step): ", registros[IP]);
+
+            char tecla = getchar();
+            if (tecla != '\n') {
+                // Limpiar el buffer si el usuario escribió una letra y apretó Enter
+                while(getchar() != '\n'); 
+            }
+
+            if (tecla == 'q' || tecla == 'Q') {
+                printf("Ejecucion abortada por el usuario.\n");
+                registros[IP] = 0xFFFFFFFF;
+                break;
+            } else if (tecla == 'g' || tecla == 'G') {
+                pausa_interactiva = 0;
+            } else if (tecla == '\n') {
+                pausa_interactiva = 1; 
+            }
+        }
+
         byte primer_byte = leer_memoria_byte(registros[IP]);
 
         byte bits_altos = (primer_byte >> 6) & 0x03;
