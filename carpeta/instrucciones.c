@@ -48,7 +48,7 @@ void ADD(void){
 
         aux = a + b;
         aux64SinSigno = (uint64_t)a + b;
-        aux64 = (int64_t)(int32_t)a + (int32_t)b;       //esta forma nos ahorra evaluar casos erróneos para overflow a mano
+        aux64 = (int64_t)(int32_t)a + (int32_t)b;       //esta forma nos ahorra evaluar casos erroneos para overflow a mano
 
         setOperando(registros[OP1],aux);
 
@@ -162,27 +162,41 @@ void DIV(void){
         b = getOperando(registros[OP2]);
 
         if(b != 0){
-            aux = a / b;
-            aux64 = (int64_t)(int32_t)a / (int32_t)b;
 
-            setOperando(registros[OP1], aux);
+            if (a == (int32_t)0x80000000 && b == -1) {
+            registros[OP1] = 0x80000000; 
+            registros[AC] = 0;
 
-            registros[AC] = (int32_t)a % (int32_t)b;
-            registros[CC] &= ~(FLAG_N | FLAG_Z | FLAG_C | FLAG_V);
-
-            if ((int32_t)aux < 0)
-                registros[CC] |= FLAG_N;
-            else
-                if (aux == 0)
-                    registros[CC] |= FLAG_Z;
-
-            if (aux64 != aux) {    //límites de 32 bits
-                registros[CC] |= FLAG_C;        //-2147483648 / -1 -> hace 2147483648 / 4294967295 que da 0 y debería dar 2147483648
-                registros[CC] |= FLAG_V;
+            // carry / overflow                         
+            registros[CC] |= FLAG_C;    
+            registros[CC] |= FLAG_V;
             }
+            else{
+                aux = a / b;
+                aux64 = (int64_t)(int32_t)a / (int32_t)b;
+
+                setOperando(registros[OP1], aux);
+
+                registros[AC] = (int32_t)a % (int32_t)b;
+                registros[CC] &= ~(FLAG_N | FLAG_Z | FLAG_C | FLAG_V);
+
+                if ((int32_t)aux < 0)
+                    registros[CC] |= FLAG_N;
+                else
+                    if (aux == 0)
+                        registros[CC] |= FLAG_Z;
+
+                if (aux64 != aux) {    //limites de 32 bits
+                    registros[CC] |= FLAG_C;        //-2147483648 / -1 -> hace 2147483648 / 4294967295 que da 0 y deberia dar 2147483648
+                    registros[CC] |= FLAG_V;
+                }
+            }
+
+            
         }
         else{
-            printf("\nError: División por cero.");
+
+            printf("\nError: Division por cero.");
             registros[IP] = 0xFFFFFFFF;
             return;
         }
@@ -323,7 +337,7 @@ void SWAP(void){
         setOperando(registros[OP2],b);
 
         registros[CC] &= ~(FLAG_N | FLAG_Z | FLAG_C | FLAG_V);
-        if ((int32_t)a < 0)                                     //el último XOR es sobre a
+        if ((int32_t)a < 0)                                     //el ultimo XOR es sobre a
             registros[CC] |= FLAG_N;
         else
             if (a == 0)
@@ -518,8 +532,6 @@ void SYS(void){
 
     a = getOperando(registros[OP1]);
     
-    // CORRECCIÓN: El tipo para SYS siempre es registro según la VM, 
-    // pero OP1 es el código de sistema (1 o 2). El a ya contiene ese valor.
     aux = registros[ECX];
     modo = registros[EAX];
     posInicial = registros[EDX];
@@ -542,7 +554,6 @@ void SYS(void){
                 case 4: scanf("%o", &dato);            
                         break;
                 case 2: {
-                        // CORRECCIÓN: Uso de char temporal para evitar basura en el dword
                         char temp;
                         scanf(" %c", &temp);            
                         dato = temp;
@@ -554,7 +565,6 @@ void SYS(void){
                         break;
             }
 
-            // CORRECCIÓN: Actualizar LAR, MAR y MBR antes de escribir
             registros[LAR] = dirLogica;
             registros[MAR] = (tamano << 16) | (dirFisica & 0xFFFF);
             registros[MBR] = dato;
@@ -570,7 +580,6 @@ void SYS(void){
             dirFisica = traducir_direccion(dirLogica,tamano);
             printf("\n[%04X]: ",dirFisica);
 
-            // CORRECCIÓN: Actualizar LAR y MAR antes de leer
             registros[LAR] = dirLogica;
             registros[MAR] = (tamano << 16) | (dirFisica & 0xFFFF);
 
@@ -579,7 +588,6 @@ void SYS(void){
             else if(tamano == 4)
                 dato = leer_memoria_dword(dirLogica);
 
-            // CORRECCIÓN: Actualizamos MBR con lo que acabamos de leer
             registros[MBR] = dato;
 
             if (modo & 0x01)            
@@ -596,13 +604,13 @@ void SYS(void){
             if (modo & 0x10){          
                 bitsTot = tamano * 8;
                 printf("0b");
-                for (i = bitsTot - 1; i >= 0; i--) // Ajustado i = bitsTot - 1 para no imprimir un bit de más
+                for (i = bitsTot - 1; i >= 0; i--)
                     printf("%d", (dato >> i) & 1);
                 printf("\n");
             }
         }
     } else {
-        printf("\nError: Llamada al sistema inválida");
+        printf("\nError: Llamada al sistema invalida");
         registros[IP] = 0xFFFFFFFF;
         return;
     }
@@ -729,7 +737,6 @@ dword getOperando(dword operando) {
     tipo = operando >> TRESBYTES;
     valor = operando & 0x00FFFFFF; // FFFFFF00
 
-    // CORRECCIÓN: Separamos la matemática de extensión de signo según el tipo de operando
     if (tipo == 2) {
         valSig = (int32_t)(valor << 16) >> 16; // Inmediatos (16 bits en la parte baja)
     } else {
@@ -771,11 +778,10 @@ void setOperando(dword operando, dword valor) {
         registros[codReg] = valor;
     else
         if (tipo == 3) {     // Escritura física en memoria (RAM)
-            // CORRECCIÓN: Usamos el corrimiento de 8 porque el offset está en la parte alta
             valSig = (int32_t)(val << 8) >> 16;        // offset
             dirLog = registros[codReg] + valSig;       // La dirección lógica = base + desplazamiento
 
-            registros[LAR] = dirLog;         // Actualizamos los registros
+            registros[LAR] = dirLog;     
             registros[MBR] = valor;
             escribir_memoria_dword(dirLog, valor);
         }

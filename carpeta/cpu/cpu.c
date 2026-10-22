@@ -44,8 +44,6 @@ void inicializar_tabla_funciones(void){
     tabla_funciones[0x0A] = NOT;
     tabla_funciones[0x0F] = STOP;
 
-
-
 }
 
 dword registros[32] = {0};

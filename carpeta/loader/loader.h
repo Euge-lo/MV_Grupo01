@@ -7,6 +7,4 @@
 
 bool cargarPrograma(const char *rutaArchivo);
 
-word obtenerTamanoCodigo(void);
-
 #endif
