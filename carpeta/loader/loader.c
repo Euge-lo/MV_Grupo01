@@ -12,40 +12,31 @@ bool cargarPrograma(const char *rutaArchivo) {
     if (archivo == NULL) {
         printf("Error: No se pudo abrir el archivo %s \n", rutaArchivo);
         return false;
-      }
-    else{
+    }
 
-      if (fread(firma, 1, 5, archivo) != 5) {
-            printf("Error: Archivo demasiado corto para leer la firma.\n");
-            fclose(archivo);
-            return false;
-        }
+    if (fread(firma, 1, 5, archivo) != 5) {
+        printf("Error: Archivo demasiado corto.\n");
+        fclose(archivo);
+        return false;
+    }
 
-       // Validacion del Identificador (Bytes 0-4: "VMX26")
-      if (strncmp(firma, "VMX26", 5) != 0) {
-         printf("Error: Firma invalida. Se esperaba VMX26, se leyo %s\n", firma);
-         fclose(archivo);
-         return false;
-      }
-      else{
-         printf("Firma VMX26 validada correctamente \n");
-            //Validacion de la Version (Byte 5: Valor 1)
-            if (fread(&version, 1, 1, archivo) != 1) {
-               printf("Error: Archivo truncado. No se pudo leer la version.\n");
-               fclose(archivo);
-               return false;
-            }
-            else{
-               if (version != 1) {
-                  printf("Error: Version incompatible (%d). Se esperaba la version 1.\n", version);
-                  fclose(archivo);
-                  return false;
-               }
-               else{
-                  printf("Version validada correctamente.\n");
-                  //Lectura del Tamano del Codigo (Bytes 6-7)
+    if (strncmp(firma, "VMX26", 5) != 0) {
+        printf("Error: Firma invalida.\n");
+        fclose(archivo);
+        return false;
+    }
+
+    if (fread(&version, 1, 1, archivo) != 1) {
+        printf("Error: Archivo truncado al leer la version.\n");
+        fclose(archivo);
+        return false;
+    }
+
+
+    if (version == 1) {
+        printf("Version validada correctamente, version 1 de la MV \n");
+                  //Lectura del Tamano del Codigo
                   byte bufferTam[2];
-                  // Leemos 2 bloques de 1 byte
                   if (fread(bufferTam, 1, 2, archivo) != 2) {
                      printf("Error: Archivo truncado. No se pudo leer el tamano del codigo.\n");
                      fclose(archivo);
@@ -56,7 +47,6 @@ bool cargarPrograma(const char *rutaArchivo) {
                   configurar_segmentos(tamCodigo);
 
                   printf("Tamano del bloque de codigo leido: %d bytes \n", tamCodigo);
-
 
                      // Volcado del Codigo en el Segmento 0 (Code Segment)
                      dword direccionCodigo = 0x00000000;
@@ -90,21 +80,27 @@ bool cargarPrograma(const char *rutaArchivo) {
                      fclose(archivo);
                      printf("Carga finalizada con exito. La maquina virtual esta lista \n");
                      return true;
-
-               }
-
-
-
-            }
-
-
-
-
-         }
-
-
-
-      }
-
+        
+    } 
+    else 
+      if (version == 2) {
+        printf("Version validada correctamente, version 2 de la MV\n");
+        
+        // =========================================================
+        // ACÁ VA LA LÓGICA NUEVA PARA EL TP 2
+        // =========================================================
+        
+        // 1. Leer los 12 bytes con los tamanos de PS, KS, CS, DS, ES, SS y el entry point.
+        // 2. Extraer los datos con corrimientos de bits.
+        // 3. Informar a memoria.c para que aloje el espacio dinamico.
+        // 4. Leer el archivo y volcar unicamente en CS y KS.
+        
+        fclose(archivo);
+        return true;
+    } 
+      else {
+        printf("Error: Version incompatible (%d).\n", version);
+        fclose(archivo);
+        return false;
+    }
 }
-
