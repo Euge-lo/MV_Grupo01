@@ -13,7 +13,7 @@ const char* nom_registros[32] = {"IP", "OPC", "OP1", "OP2", "LAR", "MAR", "MBR",
     "CC", "RES", "RES", "RES", "RES", "RES", "RES", "RES", "RES", "CS", "DS", "ES", "SS", "KS", "PS",
 };
 
-int arma_dissa(byte tipo, dword ip_dissa, char* str_op, char* str_hex){
+int arma_dissa(byte tipo, dword ip_dissa, char* str_op, char* str_hex, int version){
     switch(tipo){
         case 0x01: {// registro
             byte b1 = leer_memoria_byte(ip_dissa);
@@ -23,7 +23,7 @@ int arma_dissa(byte tipo, dword ip_dissa, char* str_op, char* str_hex){
             char nombre_reg[5];
             strcpy(nombre_reg, nom_registros[reg]);
 
-            if(reg >= 10 && reg <= 15){
+            if(reg >= 10 && reg <= 15 && version == 2){
                 if(sectorRegistro == 1){
                     nombre_reg[0] = nombre_reg[1];
                     nombre_reg[1] = 'L';
@@ -69,12 +69,14 @@ int arma_dissa(byte tipo, dword ip_dissa, char* str_op, char* str_hex){
             byte tamMem = (b1 >> 5) & 0x07;
 
             char prefijo[2] = "";
-            if (tamMem == 1) {
-                strcpy(prefijo, "b");
-            } else if (tamMem == 2) {
-                strcpy(prefijo, "w");
-            } else if (tamMem == 4) {
-                strcpy(prefijo, "l");
+            if(version == 2){
+                if (tamMem == 1) {
+                    strcpy(prefijo, "b");
+                } else if (tamMem == 2) {
+                    strcpy(prefijo, "w");
+                } else if (tamMem == 4) {
+                    strcpy(prefijo, "l");
+                }
             }
 
 
@@ -94,7 +96,7 @@ int arma_dissa(byte tipo, dword ip_dissa, char* str_op, char* str_hex){
 }
 
 
-dword desensamblar(dword ip_actual, dword entry_point){
+dword desensamblar(dword ip_actual, dword entry_point, int version){
     char str_hex[32] = "";
     char str_opa[32] = "";
     char str_opb[32] = "";
@@ -124,16 +126,21 @@ dword desensamblar(dword ip_actual, dword entry_point){
     }
 
     if(tipo_b != 0x00) {
-        ip_dissa += arma_dissa(tipo_b, ip_dissa, str_opb, str_hex);
+        ip_dissa += arma_dissa(tipo_b, ip_dissa, str_opb, str_hex, version);
     }
 
     if(tipo_a != 0x00){
-        ip_dissa += arma_dissa(tipo_a, ip_dissa, str_opa, str_hex);
+        ip_dissa += arma_dissa(tipo_a, ip_dissa, str_opa, str_hex, version);
     }
 
     char marcador[3] = "  ";
-    if(ip_actual == entry_point){
-        strcpy(marcador, "> ");
+    if(version == 2){
+        
+        if(ip_actual == entry_point){
+            strcpy(marcador, "> ");
+        }
+    }else{
+        strcpy(marcador, "");
     }
 
 

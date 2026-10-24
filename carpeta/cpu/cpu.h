@@ -41,11 +41,11 @@
 #define FLAG_V 0x10000000
 
 extern dword registros[32];
-extern int pausa_sistema;
+extern int pausa_interactiva;
 
 void instruccion_invalida(void);
-void inicializar_tabla_funciones(void);
-void inicializar_registros(dword entry_point);
+void inicializar_tabla_funciones(int version);
+void inicializar_registros(dword entry_point, int version);
 dword leer_valor_operando(byte tipo);
-void iniciar_ejecucion(void);
+void iniciar_ejecucion(int version);
 

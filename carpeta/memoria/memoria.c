@@ -12,37 +12,51 @@ void inicializar_memoria(void){
         memoria_principal[i] = 0;
 }
 
-void configurar_segmentos(dword t_PS, dword t_KS, dword t_CS, dword t_DS, dword t_ES, dword t_SS) {
-    dword base_fisica = 0;
-    dword indice_tabla = 0;
+void configurar_segmentos(dword t_PS, dword t_KS, dword t_CS, dword t_DS, dword t_ES, dword t_SS, int version) {
+    if(version == 2){
+        dword base_fisica = 0;
+        dword indice_tabla = 0;
 
-    dword tamanos[6] = {t_PS, t_KS, t_CS, t_DS, t_ES, t_SS};
-    dword reg_ids[6] = {PS, KS, CS, DS, ES, SS};
+        dword tamanos[6] = {t_PS, t_KS, t_CS, t_DS, t_ES, t_SS};
+        dword reg_ids[6] = {PS, KS, CS, DS, ES, SS};
 
-    for(int i = 0; i < 6; i++){
-        if(tamanos[i] > 0){
-            if(base_fisica + tamanos[i] > TAMANO_MEMORIA){
-                printf("ERROR: Memoria insuficiente.\n");
-                exit(1);
+        for(int i = 0; i < 6; i++){
+            if(tamanos[i] > 0){
+                if(base_fisica + tamanos[i] > TAMANO_MEMORIA){
+                    printf("ERROR: Memoria insuficiente.\n");
+                    exit(1);
+                }
+
+                tabla_segmentos[indice_tabla] = (base_fisica << 16) | tamanos[i] & 0xFFFF;
+                registros[reg_ids[i]] = (indice_tabla << 16) | 0x0000;
+
+                base_fisica += tamanos[i];
+                indice_tabla++;
+            }else{
+                registros[reg_ids[i]] = 0xFFFFFFFF;
             }
+        }
 
-            tabla_segmentos[indice_tabla] = (base_fisica << 16) | tamanos[i] & 0xFFFF;
-            registros[reg_ids[i]] = (indice_tabla << 16) | 0x0000;
+        for(int i = indice_tabla; i < 8; i++)
+            tabla_segmentos[i] = 0xFFFFFFFF;
 
-            base_fisica += tamanos[i];
-            indice_tabla++;
-        }else{
-            registros[reg_ids[i]] = 0xFFFFFFFF;
+        if(t_SS > 0)
+            registros[SP] = registros[SS] + t_SS;
+        else
+            registros[SP] = 0xFFFFFFFF;
+    }else if(version == 1){
+        tabla_segmentos[0] = (0x0000 << 16) | (t_CS & 0xFFFF);
+
+
+        dword base_datos = t_CS;
+        //dword tamano_datos = 16384 - t_CS;
+        tabla_segmentos[1] = (base_datos << 16) | (t_DS & 0xFFFF);
+
+
+        for (int i = 2; i < 8; i++) {
+            tabla_segmentos[i] = 0xFFFFFFFF;
         }
     }
-
-    for(int i = indice_tabla; i < 8; i++)
-        tabla_segmentos[i] = 0xFFFFFFFF;
-
-    if(t_SS > 0)
-        registros[SP] = registros[SS] + t_SS;
-    else
-        registros[SP] = 0xFFFFFFFF;
 }
 
 dword traducir_direccion(dword direccion_logica, byte cant_bytes){
