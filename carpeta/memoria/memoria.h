@@ -1,6 +1,7 @@
 #include "..\tipos.h"
 
-#define TAMANO_MEMORIA 16384
+extern dword TAMANO_MEMORIA;
+extern byte *memoria_principal;
 
 void configurar_segmentos(dword t_PS, dword t_KS, dword t_CS, dword t_DS, dword t_ES, dword t_SS, int version);
 void inicializar_memoria(void);

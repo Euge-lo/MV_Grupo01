@@ -3,13 +3,20 @@
 #include "memoria.h"
 #include "..\cpu\cpu.h"
 
-byte memoria_principal[TAMANO_MEMORIA] = {0};
+
+dword TAMANO_MEMORIA = 16384;
+byte *memoria_principal = NULL;
 
 dword tabla_segmentos[8] = {0};
 
 void inicializar_memoria(void){
-    for(int i = 0; i < TAMANO_MEMORIA; i++)
-        memoria_principal[i] = 0;
+   if (memoria_principal != NULL) free(memoria_principal);
+   memoria_principal = (byte*)calloc(TAMANO_MEMORIA, sizeof(byte));
+
+   if (memoria_principal == NULL) {
+       printf("Error: No se pudo reservar la memoria.\n");
+       exit(1);
+   }
 }
 
 void configurar_segmentos(dword t_PS, dword t_KS, dword t_CS, dword t_DS, dword t_ES, dword t_SS, int version) {

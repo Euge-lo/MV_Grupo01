@@ -204,3 +204,17 @@ void iniciar_ejecucion(int version){
 
     }
 }
+
+
+void inicializar_pila(dword argc, dword argv_ptr){
+    if(registros[SS] != 0xFFFFFFFF){
+        registros[SP] -= 4;
+        escribir_memoria_dword(registros[SP], argv_ptr);
+
+        registros[SP] -= 4;
+        escribir_memoria_dword(registros[SP], argc);
+
+        registros[SP] -= 4;
+        escribir_memoria_dword(registros[SP], 0xFFFFFFFF);
+    }
+}

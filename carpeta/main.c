@@ -43,6 +43,8 @@ int main(int argc, char *argv[]) {
     }
 
     inicializar_registros();
+
+    inicializar_pila(0, 0xFFFFFFFF);
     
     iniciar_ejecucion();
 
