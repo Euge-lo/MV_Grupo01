@@ -4,7 +4,7 @@
 #include "loader.h"
 #include "../memoria/memoria.h"
 
-bool cargarPrograma(const char *rutaArchivo) {
+bool cargarPrograma(const char *rutaArchivo, int cant_parametros, char *parametros[]){
     char firma[6] = {0};
     FILE *archivo = fopen(rutaArchivo, "rb");
     byte version;
@@ -139,6 +139,27 @@ bool cargarPrograma(const char *rutaArchivo) {
                     return false;
                 }
             }
+        }
+
+        //Volcado del param segment (PS)
+        if (cant_parametros > 0 && parametros != NULL) {
+            dword direccionPS = (0 << 16) | 0x0000; // indice 0
+            dword offset_ps = 0;
+
+            printf("Volcando parametros en el Param Segment...\n");
+
+            // Recorremos el arreglo de strings que nos paso el main
+            for (int i = 0; i < cant_parametros; i++) {
+                // Volcamos letra por letra
+                for (int j = 0; parametros[i][j] != '\0'; j++) {
+                    escribir_memoria_byte(direccionPS + offset_ps, parametros[i][j]);
+                    offset_ps++;
+                }
+                // Terminador nulo de C
+                escribir_memoria_byte(direccionPS + offset_ps, '\0');
+                offset_ps++;
+            }
+            printf("Se volcaron %d bytes de texto en el Param Segment.\n", offset_ps);
         }
 
         printf("Carga de Version 2 finalizada con exito.\n");
