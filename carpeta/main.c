@@ -14,27 +14,52 @@
 #include "cpu/cpu.c"
 
 int main(int argc, char *argv[]) {
-
-   
-    if (argc < 2 || argc > 3) {
-        printf("Error: Uso incorrecto de la maquina virtual.\n");
-        printf("Formato esperado: vmx archivo.vmx [-d]\n");
+    if (argc < 2) {
+        printf("Error: Falta el archivo .vmx\n");
         return 1;
     }
 
     char *rutaArchivo = argv[1];
     
-    printf("Intentando cargar: %s\n", rutaArchivo);
-    if (!cargarPrograma(rutaArchivo)) {
-        return 1;
+    bool modo_disassembler = false;
+    bool parametrosflag = false;
+    int cant_parametros = 0;
+    int i_parametros;
+
+    for (int i = 1; i < argc; i++) {
+        if (strncmp(argv[i], "m=", 2) == 0) {
+            TAMANO_MEMORIA = atoi(argv[i] + 2);
+            printf("Memoria ajustada a %d bytes.\n", TAMANO_MEMORIA);
+        }else 
+            if (strcmp(argv[i], "-d") == 0) {
+                modo_disassembler = true;
+        }else
+            if (strcmp(argv[i], "-p") == 0) {
+            i_parametros = i + 1; // Guardamos la posicion del primer parametro
+            cant_parametros = argc - i_parametros; // Calculamos cuantos arg quedan
+            parametrosflag = true;
+            
+            break;
+            }
     }
-    else{
-      printf("Primer byte del codigo: %02X\n", leer_memoria_byte(0x00000000));
+    
+    char *parametros[] = NULL;
+    if (parametrosflag) {
+        parametros = &argv[i_parametros];
+    }
+
+
+    // se inicial memoria antes de cargar los segmentos con el archivo
+    inicializar_memoria();
+
+    if (!cargarPrograma(rutaArchivo, cant_parametros, parametros)) {
+        printf("Fallo la carga del loader.\n");
+        return 1; 
     }
 
     word tamano_codigo = obtenerTamCodigo();
 
-    if(argc >= 3 && strcmp(argv[2], "-d") == 0){
+    if (modo_disassembler) {
         dword ip_actual = 0;
 
         while(ip_actual < tamano_codigo){
@@ -46,8 +71,6 @@ int main(int argc, char *argv[]) {
     
     iniciar_ejecucion();
 
-    printf("Dato en memoria [0]: %08X\n", leer_memoria_dword(0x00010000)); 
-    printf("Dato en memoria [4]: %08X\n", leer_memoria_dword(0x00010004));
 
     return 0;
 }
