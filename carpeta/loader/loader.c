@@ -104,9 +104,15 @@ bool cargarPrograma(const char *rutaArchivo, int cant_parametros, char *parametr
 
         // chwqueo de tamanos
         // printf("Tamanos v2 -> CS: %d, DS: %d, ES: %d, SS: %d, KS: %d | Entry: %d\n", cs_size, ds_size, es_size, ss_size, ks_size, entry_point);
-
+        word ps_size = 0;
+        if (cant_parametros > 0 && parametros != NULL) {
+            for (int i = 0; i < cant_parametros; i++) {
+                // strlen cuenta las letras, el +1 es para contar el '\0'
+                ps_size += strlen(parametros[i]) + 1; 
+            }
+        }
         // Configurar tabla de segmentos
-        configurar_segmentos_v2(cs_size, ds_size, es_size, ss_size, ks_size);
+        configurar_segmentos_v2(cs_size, ds_size, es_size, ss_size, ks_size, ps_size);
 
         dword direccionCS = (2 << 16) | 0x0000;
         dword direccionKS = (1 << 16) | 0x0000;
