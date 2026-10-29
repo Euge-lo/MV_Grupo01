@@ -13,6 +13,8 @@
 #include "cpu/cpu.h"
 #include "cpu/cpu.c"
 
+int version = 0;
+
 int main(int argc, char *argv[]) {
 
    
@@ -32,17 +34,26 @@ int main(int argc, char *argv[]) {
       printf("Primer byte del codigo: %02X\n", leer_memoria_byte(0x00000000));
     }
 
+    //necesito que me pases estos 2 desde el loader
+    extern dword entry_point;
+    extern dword argv_ptr_memoria;
+
     word tamano_codigo = obtenerTamCodigo();
+
 
     if(argc >= 3 && strcmp(argv[2], "-d") == 0){
         dword ip_actual = 0;
 
         while(ip_actual < tamano_codigo){
-            ip_actual = desensamblar(ip_actual);
+            ip_actual = desensamblar(ip_actual, entry_point);
         }
     }
 
-    inicializar_registros();
+    inicializar_registros(entry_point);
+
+    if(version == 2){
+        inicializar_pila(cant_parametros, argv_ptr_memoria);
+    }
 
     inicializar_pila(0, 0xFFFFFFFF);
     

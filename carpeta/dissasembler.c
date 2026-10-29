@@ -13,7 +13,7 @@ const char* nom_registros[32] = {"IP", "OPC", "OP1", "OP2", "LAR", "MAR", "MBR",
     "CC", "RES", "RES", "RES", "RES", "RES", "RES", "RES", "RES", "CS", "DS", "ES", "SS", "KS", "PS",
 };
 
-int arma_dissa(byte tipo, dword ip_dissa, char* str_op, char* str_hex, int version){
+int arma_dissa(byte tipo, dword ip_dissa, char* str_op, char* str_hex){
     switch(tipo){
         case 0x01: {// registro
             byte b1 = leer_memoria_byte(ip_dissa);
@@ -96,7 +96,7 @@ int arma_dissa(byte tipo, dword ip_dissa, char* str_op, char* str_hex, int versi
 }
 
 
-dword desensamblar(dword ip_actual, dword entry_point, int version){
+dword desensamblar(dword ip_actual, dword entry_point){
     char str_hex[32] = "";
     char str_opa[32] = "";
     char str_opb[32] = "";
@@ -126,11 +126,11 @@ dword desensamblar(dword ip_actual, dword entry_point, int version){
     }
 
     if(tipo_b != 0x00) {
-        ip_dissa += arma_dissa(tipo_b, ip_dissa, str_opb, str_hex, version);
+        ip_dissa += arma_dissa(tipo_b, ip_dissa, str_opb, str_hex);
     }
 
     if(tipo_a != 0x00){
-        ip_dissa += arma_dissa(tipo_a, ip_dissa, str_opa, str_hex, version);
+        ip_dissa += arma_dissa(tipo_a, ip_dissa, str_opa, str_hex);
     }
 
     char marcador[3] = "  ";

@@ -3,7 +3,8 @@
 extern dword TAMANO_MEMORIA;
 extern byte *memoria_principal;
 
-void configurar_segmentos(dword t_PS, dword t_KS, dword t_CS, dword t_DS, dword t_ES, dword t_SS, int version);
+void configurar_segmentos_2(dword t_PS, dword t_KS, dword t_CS, dword t_DS, dword t_ES, dword t_SS);
+void configurar_segmentos(word tamano_codigo);
 void inicializar_memoria(void);
 dword traducir_direccion(dword direccion_logica, byte cant_bytes);
 byte leer_memoria_byte(dword direccion_logica);

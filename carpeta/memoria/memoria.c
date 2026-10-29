@@ -19,8 +19,8 @@ void inicializar_memoria(void){
    }
 }
 
-void configurar_segmentos(dword t_PS, dword t_KS, dword t_CS, dword t_DS, dword t_ES, dword t_SS, int version) {
-    if(version == 2){
+void configurar_segmentos_2(dword t_PS, dword t_KS, dword t_CS, dword t_DS, dword t_ES, dword t_SS) {
+    
         dword base_fisica = 0;
         dword indice_tabla = 0;
 
@@ -51,18 +51,21 @@ void configurar_segmentos(dword t_PS, dword t_KS, dword t_CS, dword t_DS, dword 
             registros[SP] = registros[SS] + t_SS;
         else
             registros[SP] = 0xFFFFFFFF;
-    }else if(version == 1){
-        tabla_segmentos[0] = (0x0000 << 16) | (t_CS & 0xFFFF);
+
+}
+
+void configurar_segmentos(word tamano_codigo) {
+
+    tabla_segmentos[0] = (0x0000 << 16) | (tamano_codigo & 0xFFFF);
 
 
-        dword base_datos = t_CS;
-        //dword tamano_datos = 16384 - t_CS;
-        tabla_segmentos[1] = (base_datos << 16) | (t_DS & 0xFFFF);
+    dword base_datos = tamano_codigo;
+    dword tamano_datos = 16384 - tamano_codigo;
+    tabla_segmentos[1] = (base_datos << 16) | (tamano_datos & 0xFFFF);
 
 
-        for (int i = 2; i < 8; i++) {
-            tabla_segmentos[i] = 0xFFFFFFFF;
-        }
+    for (int i = 2; i < 8; i++) {
+        tabla_segmentos[i] = 0xFFFFFFFF;
     }
 }
 

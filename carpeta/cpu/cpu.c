@@ -10,7 +10,7 @@ void instruccion_invalida(void){
     printf("Instruccion no registrada (OPC: %02X)\n", registros[OPC]);
 }
 
-void inicializar_tabla_funciones(int version){
+void inicializar_tabla_funciones(){
     for(int i = 0; i < 32; i++){
         tabla_funciones[i] = instruccion_invalida;
     }
@@ -57,7 +57,7 @@ void inicializar_tabla_funciones(int version){
 dword registros[32] = {0};
 int pausa_sistema = 0;
 
-void inicializar_registros(dword entry_point, int version){
+void inicializar_registros(dword entry_point){
     if(version == 2){
         for(int i = 0; i < 32; i++) {
             if (i != CS && i != DS && i != ES && i != SS && i != KS && i != PS && i != SP) {
@@ -120,8 +120,8 @@ dword leer_valor_operando(byte tipo){
     return valor;
 }
 
-void iniciar_ejecucion(int version){
-    inicializar_tabla_funciones(version);
+void iniciar_ejecucion(){
+    inicializar_tabla_funciones();
 
 
     printf("Iniciando ejecucion\n");
