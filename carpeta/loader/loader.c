@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
 #include "loader.h"
@@ -117,7 +118,7 @@ bool cargarPrograma(const char *rutaArchivo, int cant_parametros, char *parametr
         dword direccionCS = (2 << 16) | 0x0000;
         dword direccionKS = (1 << 16) | 0x0000;
 
-        //Volcado del Code Segment
+        //Volcado del Code Segment (CS)
         if (cs_size > 0) {
             printf("Cargando %d bytes en el Code Segment...\n", cs_size);
             for (int i = 0; i < cs_size; i++) {
@@ -132,7 +133,7 @@ bool cargarPrograma(const char *rutaArchivo, int cant_parametros, char *parametr
             }
         }
 
-        // Volcado del Const Segment
+        // Volcado del Const Segment (KS)
         if (ks_size > 0) {
             printf("Cargando %d bytes en el Const Segment...\n", ks_size);
             for (int i = 0; i < ks_size; i++) {
@@ -177,4 +178,114 @@ bool cargarPrograma(const char *rutaArchivo, int cant_parametros, char *parametr
         fclose(archivo);
         return false;
     }
+}
+
+bool generar_imagen_vmi(const char *rutaArchivo, dword registros[32], dword tabla_segmentos[8], byte *memoria, word tamano_memoria_kib) {
+    FILE *archivo = fopen(rutaArchivo, "wb");
+    if (archivo == NULL) {
+        printf("Error: No se pudo crear el archivo de imagen %s\n", rutaArchivo);
+        return false;
+    }
+
+    //Escritura del Header (8 bytes totales)
+    // Bytes 0-4: Identificador
+    fwrite("VMI26", 1, 5, archivo);
+    
+    // Byte 5: Version
+    byte version = 1;
+    fwrite(&version, 1, 1, archivo);
+    
+    // Bytes 6-7: memoria en KiB
+    // Desplazamiento de bits para asegurar correcta lectura cruzada
+    byte bufferTam[2];
+    bufferTam[0] = (tamano_memoria_kib >> 8) & 0xFF;
+    bufferTam[1] = tamano_memoria_kib & 0xFF;
+    fwrite(bufferTam, 1, 2, archivo);
+
+    //Escritura de Registros
+    if (fwrite(registros, sizeof(dword), 32, archivo) != 32) {
+        printf("Error al escribir los registros en el archivo VMI.\n");
+        fclose(archivo);
+        return false;
+    }
+
+    // Tabla de descriptores de segmentos (8 x 4 = 32 bytes)
+    if (fwrite(tabla_segmentos, sizeof(dword), 8, archivo) != 8) {
+        printf("Error al escribir la tabla de segmentos en el archivo VMI.\n");
+        fclose(archivo);
+        return false;
+    }
+
+    // Memoria principal (variable)
+    // Convertimos los KiB a bytes reales para saber cuanto volcar
+    dword tamano_memoria_bytes = tamano_memoria_kib * 1024;
+    if (fwrite(memoria, 1, tamano_memoria_bytes, archivo) != tamano_memoria_bytes) {
+        printf("Error al escribir la memoria en el archivo VMI.\n");
+        fclose(archivo);
+        return false;
+    }
+
+    fclose(archivo);
+    printf("Imagen generada correctamente: %s (Memoria volcada: %d KiB)\n", rutaArchivo, tamano_memoria_kib);
+    return true;
+}
+
+// IMPORTANTE: SE NECESITA TENER LA RAM YA EXISTA (MALLOC PREVIO) PARA EJECUTAR cargar_imagen_vmi
+bool cargar_imagen_vmi(const char *rutaArchivo, dword registros[32], dword tabla_segmentos[8], byte *memoria, word *tamano_memoria_kib) {
+    FILE *archivo = fopen(rutaArchivo, "rb"); // "rb" para lectura binaria
+    if (archivo == NULL) {
+        printf("Error: No se pudo abrir el archivo de imagen %s\n", rutaArchivo);
+        return false;
+    }
+
+    // Lectura y validacion del Header (8 bytes)
+    char firma[6] = {0};
+    if (fread(firma, 1, 5, archivo) != 5 || strncmp(firma, "VMI26", 5) != 0) {
+        printf("Error: Firma invalida en el archivo VMI.\n");
+        fclose(archivo);
+        return false;
+    }
+
+    byte version;
+    if (fread(&version, 1, 1, archivo) != 1 || version != 1) {
+        printf("Error: Version de VMI incompatible.\n");
+        fclose(archivo);
+        return false;
+    }
+
+    byte bufferTam[2];
+    if (fread(bufferTam, 1, 2, archivo) != 2) {
+        printf("Error: Archivo truncado al leer tamaño de memoria.\n");
+        fclose(archivo);
+        return false;
+    }
+    
+    // Reconstruimos el tamano en KiB
+    *tamano_memoria_kib = (bufferTam[0] << 8) | bufferTam[1];
+    dword tamano_memoria_bytes = (*tamano_memoria_kib) * 1024;
+
+    // Lectura de Registros (128 bytes)
+    if (fread(registros, sizeof(dword), 32, archivo) != 32) {
+        printf("Error al leer los registros del archivo VMI.\n");
+        fclose(archivo);
+        return false;
+    }
+
+    // Tabla de descriptores de segmentos (32 bytes)
+    if (fread(tabla_segmentos, sizeof(dword), 8, archivo) != 8) {
+        printf("Error al leer la tabla de segmentos del VMI.\n");
+        fclose(archivo);
+        return false;
+    }
+
+    // Memoria principal
+    if (fread(memoria, 1, tamano_memoria_bytes, archivo) != tamano_memoria_bytes) {
+        printf("Error al leer la memoria del archivo VMI.\n");
+        fclose(archivo);
+        return false;
+    }
+
+    fclose(archivo);
+    printf("Imagen cargada con exito: %s (Memoria restaurada: %d KiB)\n", rutaArchivo, *tamano_memoria_kib);
+    return true;
 }
