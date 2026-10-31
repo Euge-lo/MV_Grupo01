@@ -747,7 +747,7 @@ void SYS(void){
                         break;
 
                 case 15:if (archivo_vmi_activo)
-                            generar_breakpoint();
+                            pausa_interactiva = 1;
                         break;
 
                 default:
