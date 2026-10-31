@@ -120,10 +120,10 @@ dword leer_valor_operando(byte tipo){
     return valor;
 }
 
-void iniciar_ejecucion(){
+void iniciar_ejecucion(const char *rutavmi){
     inicializar_tabla_funciones();
 
-    FILE * 
+   
 
     printf("Iniciando ejecucion\n");
 
@@ -133,25 +133,38 @@ void iniciar_ejecucion(){
 
         if (pausa_interactiva && version == 2) {
 
-            if()
+            if (rutavmi != NULL) { 
+                printf("Breakpoint. Guardando estado...\n");
+
+                
+                byte *p_mem = obtener_puntero_memoria();
+                dword *p_seg = obtener_tabla_segmentos();
+                word tam_kib = TAMANO_MEMORIA / 1024;
+
+                
+                generar_imagen_vmi(rutavmi, registros, p_seg, p_mem, tam_kib);
+
+                
+                printf("\n[BREAKPOINT] IP: %04X | Presione 'g' (Go), 'q' (Quit) o 'Enter' (Step): ", registros[IP]);
+
+                char tecla = getchar();
+                if (tecla != '\n') {
+                    // Limpiar el buffer si el usuario escribió una letra y apretó Enter
+                    while(getchar() != '\n'); 
+                }
+
+                if (tecla == 'q' || tecla == 'Q') {
+                    printf("Ejecucion abortada por el usuario.\n");
+                    registros[IP] = 0xFFFFFFFF;
+                    break;
+                } else if (tecla == 'g' || tecla == 'G') {
+                    pausa_interactiva = 0;
+                } else if (tecla == '\n') {
+                    pausa_interactiva = 1; 
+                }
+            }
             
-            printf("\n[BREAKPOINT] IP: %04X | Presione 'g' (Go), 'q' (Quit) o 'Enter' (Step): ", registros[IP]);
-
-            char tecla = getchar();
-            if (tecla != '\n') {
-                // Limpiar el buffer si el usuario escribió una letra y apretó Enter
-                while(getchar() != '\n'); 
-            }
-
-            if (tecla == 'q' || tecla == 'Q') {
-                printf("Ejecucion abortada por el usuario.\n");
-                registros[IP] = 0xFFFFFFFF;
-                break;
-            } else if (tecla == 'g' || tecla == 'G') {
-                pausa_interactiva = 0;
-            } else if (tecla == '\n') {
-                pausa_interactiva = 1; 
-            }
+            
         }
 
         byte primer_byte = leer_memoria_byte(registros[IP]);
