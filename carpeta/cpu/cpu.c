@@ -55,7 +55,7 @@ void inicializar_tabla_funciones(){
 }
 
 dword registros[32] = {0};
-int pausa_sistema = 0;
+int pausa_interactiva = 0;
 
 void inicializar_registros(dword entry_point){
     if(version == 2){
