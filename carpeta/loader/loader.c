@@ -5,6 +5,9 @@
 #include "loader.h"
 #include "../memoria/memoria.h"
 
+word entry_point;
+dword argv_memoria;
+
 bool cargarPrograma(const char *rutaArchivo, int cant_parametros, char *parametros[]){
     char firma[6] = {0};
     FILE *archivo = fopen(rutaArchivo, "rb");
@@ -101,19 +104,23 @@ bool cargarPrograma(const char *rutaArchivo, int cant_parametros, char *parametr
         word es_size     = (bufferV2[4] << 8)  | bufferV2[5];
         word ss_size     = (bufferV2[6] << 8)  | bufferV2[7];
         word ks_size     = (bufferV2[8] << 8)  | bufferV2[9];
-        word entry_point = (bufferV2[10] << 8) | bufferV2[11];
+        entry_point = (bufferV2[10] << 8) | bufferV2[11];
 
         // chwqueo de tamanos
-        // printf("Tamanos v2 -> CS: %d, DS: %d, ES: %d, SS: %d, KS: %d | Entry: %d\n", cs_size, ds_size, es_size, ss_size, ks_size, entry_point);
+        printf("Tamanos v2 -> CS: %d, DS: %d, ES: %d, SS: %d, KS: %d | Entry: %d\n", cs_size, ds_size, es_size, ss_size, ks_size, entry_point);
+
         word ps_size = 0;
         if (cant_parametros > 0 && parametros != NULL) {
             for (int i = 0; i < cant_parametros; i++) {
                 // strlen cuenta las letras, el +1 es para contar el '\0'
                 ps_size += strlen(parametros[i]) + 1; 
             }
+            ps_size += (cant_parametros * 4);
         }
+
+
         // Configurar tabla de segmentos
-        configurar_segmentos_v2(cs_size, ds_size, es_size, ss_size, ks_size, ps_size);
+        configurar_segmentos_v2(ps_size, cs_size, ds_size, es_size, ss_size, ks_size);
 
         dword direccionCS = (2 << 16) | 0x0000;
         dword direccionKS = (1 << 16) | 0x0000;
@@ -152,22 +159,41 @@ bool cargarPrograma(const char *rutaArchivo, int cant_parametros, char *parametr
         if (cant_parametros > 0 && parametros != NULL) {
             dword direccionPS = (0 << 16) | 0x0000; // indice 0
             dword offset_ps = 0;
+            word offsets_inicio[cant_parametros];
 
-            printf("Volcando parametros en el Param Segment...\n");
+            printf("Volcando parametros en el Param Segment... \n");
 
             // Recorremos el arreglo de strings que nos paso el main
             for (int i = 0; i < cant_parametros; i++) {
-                // Volcamos letra por letra
+                offsets_inicio[i] = (word)offset_ps;
+
                 for (int j = 0; parametros[i][j] != '\0'; j++) {
                     escribir_memoria_byte(direccionPS + offset_ps, parametros[i][j]);
                     offset_ps++;
                 }
-                // Terminador nulo de C
+                
                 escribir_memoria_byte(direccionPS + offset_ps, '\0');
                 offset_ps++;
             }
+            
+            argv_memoria = direccionPS + offset_ps;
+
+            for (int i = 0; i < cant_parametros; i++) {
+                // 16 bits altos: 0x0000 (índice del PS). 16 bits bajos: offset del texto
+                dword puntero_argv = (0x0000 << 16) | offsets_inicio[i];
+                
+                // Utilizamos una función de escritura de 4 bytes para guardar el puntero en la RAM
+                escribir_memoria_dword(direccionPS + offset_ps, puntero_argv);
+                offset_ps += 4;
+            }
+
             printf("Se volcaron %d bytes de texto en el Param Segment.\n", offset_ps);
         }
+        else
+            if (cant_parametros == 0){
+                argv_memoria = 0xFFFFFFFF;
+            }
+
 
         printf("Carga de Version 2 finalizada con exito.\n");
         fclose(archivo);
@@ -178,6 +204,10 @@ bool cargarPrograma(const char *rutaArchivo, int cant_parametros, char *parametr
         fclose(archivo);
         return false;
     }
+}
+
+word get_entry_point(void){
+    return entry_point;
 }
 
 bool generar_imagen_vmi(const char *rutaArchivo, dword registros[32], dword tabla_segmentos[8], byte *memoria, word tamano_memoria_kib) {
@@ -255,7 +285,7 @@ bool cargar_imagen_vmi(const char *rutaArchivo, dword registros[32], dword tabla
 
     byte bufferTam[2];
     if (fread(bufferTam, 1, 2, archivo) != 2) {
-        printf("Error: Archivo truncado al leer tamaño de memoria.\n");
+        printf("Error: Archivo truncado al leer tamano de memoria.\n");
         fclose(archivo);
         return false;
     }
