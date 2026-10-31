@@ -95,19 +95,19 @@ int main(int argc, char *argv[]) {
         }
 
     
-
+    word entry_point = get_entry_point();
     word tamano_codigo = obtenerTamCodigo();
 
     if (modo_disassembler) {
         dword ip_actual = 0;
 
         while(ip_actual < tamano_codigo){
-            ip_actual = desensamblar(ip_actual);
+            ip_actual = desensamblar(ip_actual, entry_point);
         }
     }
 
     if (archivo_vmx != NULL) {
-        inicializar_registros();
+        inicializar_registros(entry_point);
     }
     
     iniciar_ejecucion(archivo_vmi);

@@ -3,15 +3,16 @@
 #include <stdbool.h>
 #include <string.h>
 #include "loader.h"
+#include "../tipos.h" 
 #include "../memoria/memoria.h"
 
 word entry_point;
 dword argv_memoria;
+int version;
 
 bool cargarPrograma(const char *rutaArchivo, int cant_parametros, char *parametros[]){
     char firma[6] = {0};
     FILE *archivo = fopen(rutaArchivo, "rb");
-    byte version;
 
     if (archivo == NULL) {
         printf("Error: No se pudo abrir el archivo %s \n", rutaArchivo);
@@ -120,7 +121,7 @@ bool cargarPrograma(const char *rutaArchivo, int cant_parametros, char *parametr
 
 
         // Configurar tabla de segmentos
-        configurar_segmentos_v2(ps_size, cs_size, ds_size, es_size, ss_size, ks_size);
+        configurar_segmentos_2(ps_size, cs_size, ds_size, es_size, ss_size, ks_size);
 
         dword direccionCS = (2 << 16) | 0x0000;
         dword direccionKS = (1 << 16) | 0x0000;

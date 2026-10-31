@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 #include "dissasembler.h"
 #include "memoria/memoria.h"
 #include "cpu/cpu.h"
@@ -23,7 +24,7 @@ int arma_dissa(byte tipo, dword ip_dissa, char* str_op, char* str_hex){
             char nombre_reg[5];
             strcpy(nombre_reg, nom_registros[reg]);
 
-            if(reg >= 10 && reg <= 15){
+            if(reg >= 10 && reg <= 15 && version == 2){
                 if(sectorRegistro == 1){
                     nombre_reg[0] = nombre_reg[1];
                     nombre_reg[1] = 'L';
@@ -69,12 +70,14 @@ int arma_dissa(byte tipo, dword ip_dissa, char* str_op, char* str_hex){
             byte tamMem = (b1 >> 5) & 0x07;
 
             char prefijo[2] = "";
-            if (tamMem == 1) {
-                strcpy(prefijo, "b");
-            } else if (tamMem == 2) {
-                strcpy(prefijo, "w");
-            } else if (tamMem == 4) {
-                strcpy(prefijo, "l");
+            if(version == 2){
+                if (tamMem == 1) {
+                    strcpy(prefijo, "b");
+                } else if (tamMem == 2) {
+                    strcpy(prefijo, "w");
+                } else if (tamMem == 4) {
+                    strcpy(prefijo, "l");
+                }
             }
 
 
@@ -132,8 +135,13 @@ dword desensamblar(dword ip_actual, dword entry_point){
     }
 
     char marcador[3] = "  ";
-    if(ip_actual == entry_point){
-        strcpy(marcador, "> ");
+    if(version == 2){
+        
+        if(ip_actual == entry_point){
+            strcpy(marcador, "> ");
+        }
+    }else{
+        strcpy(marcador, "");
     }
 
 

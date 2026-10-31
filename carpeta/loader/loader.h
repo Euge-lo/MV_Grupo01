@@ -2,7 +2,7 @@
 #define LOADERH
 
 #include <stdbool.h>
-#include "tipos.h" 
+#include "../tipos.h" 
 #include "../memoria/memoria.h"
 
 bool cargarPrograma(const char *rutaArchivo, int cant_parametros, char *parametros[]);

@@ -10,7 +10,7 @@ void instruccion_invalida(void){
     printf("Instruccion no registrada (OPC: %02X)\n", registros[OPC]);
 }
 
-void inicializar_tabla_funciones(void){
+void inicializar_tabla_funciones(){
     for(int i = 0; i < 32; i++){
         tabla_funciones[i] = instruccion_invalida;
     }
@@ -42,10 +42,12 @@ void inicializar_tabla_funciones(void){
     tabla_funciones[0x08] = JNN;
     tabla_funciones[0x09] = JNZ;
     tabla_funciones[0x0A] = NOT;
-    tabla_funciones[0x0B] = PUSH;
-    tabla_funciones[0x0C] = POP;
-    tabla_funciones[0x0D] = CALL;
-    tabla_funciones[0x0E] = RET;
+    if(version == 2){
+        tabla_funciones[0x0B] = PUSH;
+        tabla_funciones[0x0C] = POP;
+        tabla_funciones[0x0D] = CALL;
+        tabla_funciones[0x0E] = RET;
+    }
     tabla_funciones[0x0F] = STOP;
 
 
@@ -53,25 +55,38 @@ void inicializar_tabla_funciones(void){
 }
 
 dword registros[32] = {0};
-int pausa_sistema = 0;
+int pausa_interactiva = 0;
 
 void inicializar_registros(dword entry_point){
-    for(int i = 0; i < 32; i++) {
-        if (i != CS && i != DS && i != ES && i != SS && i != KS && i != PS && i != SP) {
-            registros[i] = 0;
+    if(version == 2){
+        for(int i = 0; i < 32; i++) {
+            if (i != CS && i != DS && i != ES && i != SS && i != KS && i != PS && i != SP) {
+                registros[i] = 0;
+            }
         }
-    }
 
-    if (registros[CS] != 0xFFFFFFFF) {
-        registros[IP] = registros[CS] + entry_point;
-    } else {
-        registros[IP] = 0xFFFFFFFF;
-    }
+        if (registros[CS] != 0xFFFFFFFF) {
+            registros[IP] = registros[CS] + entry_point;
+        } else {
+            registros[IP] = 0xFFFFFFFF;
+        }
 
-    printf("--- Procesador Inicializado ---\n");
-    printf("Segmentos -> PS: %08X | KS: %08X | CS: %08X | DS: %08X | ES: %08X | SS: %08X\n", registros[PS], registros[KS], registros[CS], registros[DS], registros[ES], registros[SS]);
-    printf("Punteros  -> IP: %08X | SP: %08X\n", registros[IP], registros[SP]);
-    printf("-------------------------------\n");
+        printf("--- Procesador Inicializado ---\n");
+        printf("Segmentos -> PS: %08X | KS: %08X | CS: %08X | DS: %08X | ES: %08X | SS: %08X\n", registros[PS], registros[KS], registros[CS], registros[DS], registros[ES], registros[SS]);
+        printf("Punteros  -> IP: %08X | SP: %08X\n", registros[IP], registros[SP]);
+        printf("-------------------------------\n");
+    }else if(version == 1){
+        for(int i = 0; i < 32; i++)
+            registros[i] = 0;
+
+        registros[CS] = 0x00000000;
+
+        registros[DS] = (1 << 16) | 0x0000;
+
+        registros[IP] = registros[CS];
+
+        printf("Procesador inicializado. CS: %08X | DS: %08X | IP %08X\n", registros[CS], registros[DS], registros[IP]);
+    }
 }
 
 dword leer_valor_operando(byte tipo){
@@ -105,9 +120,10 @@ dword leer_valor_operando(byte tipo){
     return valor;
 }
 
-void iniciar_ejecucion(void){
+void iniciar_ejecucion(const char *rutavmi){
     inicializar_tabla_funciones();
 
+   
 
     printf("Iniciando ejecucion\n");
 
@@ -115,25 +131,40 @@ void iniciar_ejecucion(void){
 
     while(registros[IP] != 0xFFFFFFFF && registros[IP] < tamano_codigo){
 
-        if (pausa_interactiva) {
+        if (pausa_interactiva && version == 2) {
+
+            if (rutavmi != NULL) { 
+                printf("Breakpoint. Guardando estado...\n");
+
+                
+                byte *p_mem = obtener_puntero_memoria();
+                dword *p_seg = obtener_tabla_segmentos();
+                word tam_kib = TAMANO_MEMORIA / 1024;
+
+                
+                generar_imagen_vmi(rutavmi, registros, p_seg, p_mem, tam_kib);
+
+                
+                printf("\n[BREAKPOINT] IP: %04X | Presione 'g' (Go), 'q' (Quit) o 'Enter' (Step): ", registros[IP]);
+
+                char tecla = getchar();
+                if (tecla != '\n') {
+                    // Limpiar el buffer si el usuario escribió una letra y apretó Enter
+                    while(getchar() != '\n'); 
+                }
+
+                if (tecla == 'q' || tecla == 'Q') {
+                    printf("Ejecucion abortada por el usuario.\n");
+                    registros[IP] = 0xFFFFFFFF;
+                    break;
+                } else if (tecla == 'g' || tecla == 'G') {
+                    pausa_interactiva = 0;
+                } else if (tecla == '\n') {
+                    pausa_interactiva = 1; 
+                }
+            }
             
-            printf("\n[BREAKPOINT] IP: %04X | Presione 'g' (Go), 'q' (Quit) o 'Enter' (Step): ", registros[IP]);
-
-            char tecla = getchar();
-            if (tecla != '\n') {
-                // Limpiar el buffer si el usuario escribió una letra y apretó Enter
-                while(getchar() != '\n'); 
-            }
-
-            if (tecla == 'q' || tecla == 'Q') {
-                printf("Ejecucion abortada por el usuario.\n");
-                registros[IP] = 0xFFFFFFFF;
-                break;
-            } else if (tecla == 'g' || tecla == 'G') {
-                pausa_interactiva = 0;
-            } else if (tecla == '\n') {
-                pausa_interactiva = 1; 
-            }
+            
         }
 
         byte primer_byte = leer_memoria_byte(registros[IP]);
@@ -188,4 +219,22 @@ void iniciar_ejecucion(void){
         tabla_funciones[registros[OPC]]();
 
     }
+}
+
+
+void inicializar_pila(dword argc, dword argv_ptr){
+    if(registros[SS] != 0xFFFFFFFF){
+        registros[SP] -= 4;
+        escribir_memoria_dword(registros[SP], argv_ptr);
+
+        registros[SP] -= 4;
+        escribir_memoria_dword(registros[SP], argc);
+
+        registros[SP] -= 4;
+        escribir_memoria_dword(registros[SP], 0xFFFFFFFF);
+    }
+}
+
+dword* obtener_puntero_registros(void) {
+    return registros; 
 }

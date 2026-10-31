@@ -746,9 +746,10 @@ void SYS(void){
                         }
                         break;
 
-                case 15:if (archivo_vmi_activo)
-                            pausa_interactiva = 1;
-                        break;
+                case 15: pausa_interactiva = 1;
+                    break;
+                        
+                       
 
                 default:
                     printf("\nError: Llamada al sistema invalida");
