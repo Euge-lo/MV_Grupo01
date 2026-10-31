@@ -49,3 +49,4 @@ void inicializar_registros(dword entry_point);
 dword leer_valor_operando(byte tipo);
 void iniciar_ejecucion();
 void inicializar_pila(dword argc, dword argv_ptr);
+dword* obtener_puntero_registros(void);

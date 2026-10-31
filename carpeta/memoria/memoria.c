@@ -169,3 +169,11 @@ void escribir_memoria_dword(dword direccion_logica, dword valor) {
 word obtenerTamCodigo(void) {
     return (word)(tabla_segmentos[0] & 0xFFFF);
 }
+
+byte* obtener_puntero_memoria(void) {
+    return memoria_principal; 
+}
+
+dword* obtener_tabla_segmentos(void) {
+    return tabla_segmentos; 
+}

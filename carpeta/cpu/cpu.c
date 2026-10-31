@@ -123,6 +123,7 @@ dword leer_valor_operando(byte tipo){
 void iniciar_ejecucion(){
     inicializar_tabla_funciones();
 
+    FILE * 
 
     printf("Iniciando ejecucion\n");
 
@@ -131,6 +132,8 @@ void iniciar_ejecucion(){
     while(registros[IP] != 0xFFFFFFFF && registros[IP] < tamano_codigo){
 
         if (pausa_interactiva && version == 2) {
+
+            if()
             
             printf("\n[BREAKPOINT] IP: %04X | Presione 'g' (Go), 'q' (Quit) o 'Enter' (Step): ", registros[IP]);
 
@@ -217,4 +220,8 @@ void inicializar_pila(dword argc, dword argv_ptr){
         registros[SP] -= 4;
         escribir_memoria_dword(registros[SP], 0xFFFFFFFF);
     }
+}
+
+dword* obtener_puntero_registros(void) {
+    return registros; 
 }

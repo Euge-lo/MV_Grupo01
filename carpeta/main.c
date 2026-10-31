@@ -37,6 +37,7 @@ int main(int argc, char *argv[]) {
     //necesito que me pases estos 2 desde el loader
     extern dword entry_point;
     extern dword argv_ptr_memoria;
+    
 
     word tamano_codigo = obtenerTamCodigo();
 
