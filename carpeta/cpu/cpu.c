@@ -129,7 +129,7 @@ void iniciar_ejecucion(const char *rutavmi){
 
     word tamano_codigo = obtenerTamCodigo();
 
-    while(registros[IP] != 0xFFFFFFFF && registros[IP] < tamano_codigo){
+    while(registros[IP] != 0xFFFFFFFF){
 
         if (pausa_interactiva && version == 2) {
 
