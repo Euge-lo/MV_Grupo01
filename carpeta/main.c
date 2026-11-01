@@ -109,6 +109,7 @@ int main(int argc, char *argv[]) {
 
     if (archivo_vmx != NULL) {
         inicializar_registros(entry_point);
+        inicializar_pila(cant_parametros, argv_memoria);
     }
     
     iniciar_ejecucion(archivo_vmi);
