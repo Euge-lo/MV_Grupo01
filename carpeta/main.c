@@ -102,7 +102,7 @@ int main(int argc, char *argv[]) {
         dword limite = registros[CS] + tamano_codigo;
         dword ip_actual = registros[CS];
 
-        while(ip_actual < tamano_codigo){
+        while(ip_actual < limite){
             ip_actual = desensamblar(ip_actual, registros[CS] + entry_point);
         }
     }
