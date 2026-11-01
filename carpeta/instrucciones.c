@@ -941,21 +941,28 @@ void POP(void){
     }
     else
         if(version == 2){
-            codSegmento = registros[SP] >> 16;      //dirs lógicas: 2B código de segmento y 2B offset
-            offset = registros[SP] & 0xFFFF;
-            tamSegmento = tabla_segmentos[codSegmento] & 0xFFFF; //tamaño de segmento en los 2B más signif.
+            if (registros[SP]!= 0xFFFFFFFF){
+                codSegmento = registros[SP] >> 16;      //dirs lógicas: 2B código de segmento y 2B offset
+                offset = registros[SP] & 0xFFFF;
+                tamSegmento = tabla_segmentos[codSegmento] & 0xFFFF; //tamaño de segmento en los 2B más signif.
 
-            if (offset + 4 > tamSegmento) {
-                printf("\nError: STACK UNDERFLOW. La pila está vacía o no tiene bytes suficientes.");
-                registros[IP] = 0xFFFFFFFF;
-                return;
+                if (offset + 4 > tamSegmento) {
+                    printf("\nError: STACK UNDERFLOW. La pila está vacía o no tiene bytes suficientes.");
+                    registros[IP] = 0xFFFFFFFF;
+                    return;
+                }
+                else{
+                    registros[LAR] = registros[SP]; // saco los 4B del tope de la pila, SP es la dir lógica
+                    a = leer_memoria_dword(registros[SP]);
+                    registros[MBR] = a;
+                    setOperando(registros[OP1], a); //paso el valor al operando
+                    registros[SP] += 4;
+                }
             }
             else{
-                registros[LAR] = registros[SP]; // saco los 4B del tope de la pila, SP es la dir lógica
-                a = leer_memoria_dword(registros[SP]);
-                registros[MBR] = a;
-                setOperando(registros[OP1], a); //paso el valor al operando
-                registros[SP] += 4;
+                printf("\nError: STACK UNDERFLOW. La pila no fue inicializada.");
+                registros[IP] = 0xFFFFFFFF;
+                return;
             }
         }
 }
@@ -1002,21 +1009,28 @@ void RET(void){         //idem POP IP
     }
     else
         if (version == 2){
-            codSegmento = registros[SP] >> 16;      //dirs lógicas: 2B código de segmento y 2B offset
-            offset = registros[SP] & 0xFFFF;
-            tamSegmento = tabla_segmentos[codSegmento] & 0xFFFF; //tamaño de segmento en los 2B más signif.
+            if(registros[SP] != 0xFFFFFFFF){
+                codSegmento = registros[SP] >> 16;      //dirs lógicas: 2B código de segmento y 2B offset
+                offset = registros[SP] & 0xFFFF;
+                tamSegmento = tabla_segmentos[codSegmento] & 0xFFFF; //tamaño de segmento en los 2B más signif.
 
-            if (offset + 4 > tamSegmento) {
-                printf("\nError: STACK UNDERFLOW. La pila está vacía o no tiene bytes suficientes.");
+                if (offset + 4 > tamSegmento) {
+                    printf("\nError: STACK UNDERFLOW. La pila está vacía o no tiene bytes suficientes.");
+                    registros[IP] = 0xFFFFFFFF;
+                    return;
+                }
+                else{                               //extraigo IP del tope de la pila
+                    registros[LAR] = registros[SP]; // saco los 4B del tope de la pila, SP es la dir lógica
+                    registros[IP] = leer_memoria_dword(registros[SP]);
+                    registros[MBR] = registros[IP];
+
+                    registros[SP] += 4;
+                }
+            }
+            else{
+                printf("\nError: STACK UNDERFLOW. La pila no fue inicializada.");
                 registros[IP] = 0xFFFFFFFF;
                 return;
-            }
-            else{                               //extraigo IP del tope de la pila
-                registros[LAR] = registros[SP]; // saco los 4B del tope de la pila, SP es la dir lógica
-                registros[IP] = leer_memoria_dword(registros[SP]);
-                registros[MBR] = registros[IP];
-
-                registros[SP] += 4;
             }
         }
 }
