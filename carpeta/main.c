@@ -99,10 +99,11 @@ int main(int argc, char *argv[]) {
     word tamano_codigo = obtenerTamCodigo();
 
     if (modo_disassembler) {
-        dword ip_actual = 0;
+        dword limite = registros[CS] + tamano_codigo;
+        dword ip_actual = registros[CS];
 
         while(ip_actual < tamano_codigo){
-            ip_actual = desensamblar(ip_actual, entry_point);
+            ip_actual = desensamblar(ip_actual, registros[CS] + entry_point);
         }
     }
 
