@@ -6,7 +6,7 @@
 #include "cpu/cpu.h"
 
 const char* mnemonicos[32] = {
-  "SYS", "JMP", "JP", "JN", "JZ", "JC", "JV", "JNP", "JNN", "JNZ", "NOT", "!!!", "!!!", "!!!", "!!!", "STOP",
+  "SYS", "JMP", "JP", "JN", "JZ", "JC", "JV", "JNP", "JNN", "JNZ", "NOT", "PUSH", "POP", "CALL", "RET", "STOP",
   "MOV", "ADD", "SUB", "MUL", "DIV", "CMP", "AND", "OR", "XOR", "SWAP", "SHL", "SHR", "SAR", "LDL", "LDH", "RND"
 };
 
@@ -136,7 +136,7 @@ dword desensamblar(dword ip_actual, dword entry_point){
 
     char marcador[3] = "  ";
     if(version == 2){
-        
+
         if(ip_actual == entry_point){
             strcpy(marcador, "> ");
         }

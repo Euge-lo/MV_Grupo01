@@ -723,6 +723,8 @@ void SYS(void){
                         dirLogica = registros[EDX]; // Puntero inicial
                         cont = 0;
 
+                        printf("\nIngrese una cadena> ");
+
                         while ((c = getchar()) == '\n' || c == EOF);    // Limpio el buffer por si quedó un salto de línea (\n) de ingresos previos
 
                         while (c != '\n' && c != EOF) {             // Lee hasta que el usuario presione Enter
@@ -748,8 +750,8 @@ void SYS(void){
 
                 case 15: pausa_interactiva = 1;
                     break;
-                        
-                       
+
+
 
                 default:
                     printf("\nError: Llamada al sistema invalida");

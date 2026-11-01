@@ -3,7 +3,8 @@
 #include <stdbool.h>
 #include <string.h>
 #include "loader.h"
-#include "../tipos.h" 
+#include "../cpu/cpu.h"
+#include "../tipos.h"
 #include "../memoria/memoria.h"
 
 word entry_point;
@@ -85,12 +86,12 @@ bool cargarPrograma(const char *rutaArchivo, int cant_parametros, char *parametr
                      fclose(archivo);
                      printf("Carga finalizada con exito. La maquina virtual esta lista \n");
                      return true;
-        
-    } 
-    else 
+
+    }
+    else
       if (version == 2) {
         printf("Version validada correctamente, version 2 de la MV\n");
-        
+
         //Leer los 12 bytes de la cabecera
         byte bufferV2[12];
         if (fread(bufferV2, 1, 12, archivo) != 12) {
@@ -114,19 +115,19 @@ bool cargarPrograma(const char *rutaArchivo, int cant_parametros, char *parametr
         if (cant_parametros > 0 && parametros != NULL) {
             for (int i = 0; i < cant_parametros; i++) {
                 // strlen cuenta las letras, el +1 es para contar el '\0'
-                ps_size += strlen(parametros[i]) + 1; 
+                ps_size += strlen(parametros[i]) + 1;
             }
             ps_size += (cant_parametros * 4);
         }
 
 
         // Configurar tabla de segmentos
-        configurar_segmentos_2(ps_size, cs_size, ds_size, es_size, ss_size, ks_size);
+        configurar_segmentos_2(ps_size, ks_size, cs_size, ds_size, es_size, ss_size);
 
-        dword direccionCS = (2 << 16) | 0x0000;
-        dword direccionKS = (1 << 16) | 0x0000;
+        dword direccionCS = registros[CS];
+        dword direccionKS = registros[KS];
 
-        //Volcado del Code Segment (CS)
+        // Volcado del Code Segment (CS)
         if (cs_size > 0) {
             printf("Cargando %d bytes en el Code Segment...\n", cs_size);
             for (int i = 0; i < cs_size; i++) {
@@ -172,17 +173,17 @@ bool cargarPrograma(const char *rutaArchivo, int cant_parametros, char *parametr
                     escribir_memoria_byte(direccionPS + offset_ps, parametros[i][j]);
                     offset_ps++;
                 }
-                
+
                 escribir_memoria_byte(direccionPS + offset_ps, '\0');
                 offset_ps++;
             }
-            
+
             argv_memoria = direccionPS + offset_ps;
 
             for (int i = 0; i < cant_parametros; i++) {
                 // 16 bits altos: 0x0000 (índice del PS). 16 bits bajos: offset del texto
                 dword puntero_argv = (0x0000 << 16) | offsets_inicio[i];
-                
+
                 // Utilizamos una función de escritura de 4 bytes para guardar el puntero en la RAM
                 escribir_memoria_dword(direccionPS + offset_ps, puntero_argv);
                 offset_ps += 4;
@@ -199,7 +200,7 @@ bool cargarPrograma(const char *rutaArchivo, int cant_parametros, char *parametr
         printf("Carga de Version 2 finalizada con exito.\n");
         fclose(archivo);
         return true;
-    } 
+    }
       else {
         printf("Error: Version incompatible (%d).\n", version);
         fclose(archivo);
@@ -221,11 +222,11 @@ bool generar_imagen_vmi(const char *rutaArchivo, dword registros[32], dword tabl
     //Escritura del Header (8 bytes totales)
     // Bytes 0-4: Identificador
     fwrite("VMI26", 1, 5, archivo);
-    
+
     // Byte 5: Version
     byte version = 1;
     fwrite(&version, 1, 1, archivo);
-    
+
     // Bytes 6-7: memoria en KiB
     // Desplazamiento de bits para asegurar correcta lectura cruzada
     byte bufferTam[2];
@@ -290,7 +291,7 @@ bool cargar_imagen_vmi(const char *rutaArchivo, dword registros[32], dword tabla
         fclose(archivo);
         return false;
     }
-    
+
     // Reconstruimos el tamano en KiB
     *tamano_memoria_kib = (bufferTam[0] << 8) | bufferTam[1];
     dword tamano_memoria_bytes = (*tamano_memoria_kib) * 1024;

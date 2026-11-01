@@ -165,10 +165,14 @@ void escribir_memoria_dword(dword direccion_logica, dword valor) {
     memoria_principal[dir_fisica + 3] = valor & 0xFF;
 }
 
-
 word obtenerTamCodigo(void) {
+    if (version == 2 && registros[CS] != 0xFFFFFFFF) {
+        dword indice = registros[CS] >> 16;
+        return (word)(tabla_segmentos[indice] & 0xFFFF);
+    }
     return (word)(tabla_segmentos[0] & 0xFFFF);
 }
+
 
 byte* obtener_puntero_memoria(void) {
     return memoria_principal; 
